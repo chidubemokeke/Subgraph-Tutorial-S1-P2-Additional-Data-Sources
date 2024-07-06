@@ -1,56 +1,90 @@
 # Sample Queries
 
-## Most active accounts by total transfers and the accounts with the highest balance
+## Compound Governance accounts with the highest delegated votes and the Uniswap Governance accounts with the highest balances
 
 ```graphql
 {
-  mostActiveUniGovAccounts: uniGovAccounts(
-    first: 10
-    orderBy: totalTransfers
+  topCompGovDelegates: compGovAccounts(
+    orderBy: delegatedVotes
     orderDirection: desc
+    first: 10
   ) {
     id
-    totalTransfers
     balance
-    totalApprovals
+    totalTransfers
     delegatedVotes
     delegate
   }
-  mostActiveCompGovAccounts: compGovAccounts(
-    first: 10
-    orderBy: totalTransfers
-    orderDirection: desc
-  ) {
-    id
-    totalTransfers
-    balance
-    totalApprovals
-    delegatedVotes
-    delegate
-  }
-  highestBalanceUniGovAccounts: uniGovAccounts(
-    first: 10
+  topUniGovAccounts: uniGovAccounts(
     orderBy: balance
     orderDirection: desc
+    first: 10
   ) {
     id
     balance
     totalTransfers
-    totalApprovals
     delegatedVotes
     delegate
   }
-  highestBalanceCompGovAccounts: compGovAccounts(
+}
+```
+
+## Comparison of Transfer Activities Between Uniswap and Compound
+
+```graphql
+{
+  uniswapActivity: uniGovTransfers(
     first: 10
-    orderBy: balance
+    orderBy: blockTimestamp
     orderDirection: desc
   ) {
     id
-    balance
-    totalTransfers
-    totalApprovals
-    delegatedVotes
-    delegate
+    from
+    to
+    amount
+    blockTimestamp
+  }
+  compoundActivity: compGovTransfers(
+    first: 10
+    orderBy: blockTimestamp
+    orderDirection: desc
+  ) {
+    id
+    from
+    to
+    amount
+    blockTimestamp
+  }
+}
+```
+
+## Transfer History of a Specific Account
+
+```graphql
+{
+  uniGovTransfers(
+    where: { from: "0xAccountAddress" }
+    orderBy: blockTimestamp
+    orderDirection: desc
+  ) {
+    id
+    from
+    to
+    amount
+    blockNumber
+    blockTimestamp
+  }
+  compGovTransfers(
+    where: { from: "0xAccountAddress" }
+    orderBy: blockTimestamp
+    orderDirection: desc
+  ) {
+    id
+    from
+    to
+    amount
+    blockNumber
+    blockTimestamp
   }
 }
 ```
