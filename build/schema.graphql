@@ -1,0 +1,108 @@
+# Entity type for Uniswap Governance Account
+type UniGovAccount @entity {
+  id: ID! # Unique identifier for the account
+  balance: BigInt! # Current balance of the account
+  totalApprovals: BigInt! # Total approvals made by the account
+  totalTransfers: BigInt! # Total transfers involving the account
+  delegatedVotes: BigInt! # Votes delegated by the account
+  delegate: Bytes! # Current delegate of the account
+  ownerApprovals: [UniGovApproval!]! @derivedFrom(field: "ownerAccount") # Approvals made by this account
+  involvedTransfersFrom: [UniGovTransfer!]! @derivedFrom(field: "fromAccount") # Transfers where this account is the sender
+  involvedTransfersTo: [UniGovTransfer!]! @derivedFrom(field: "toAccount") # Transfers where this account is the receiver
+}
+# Entity type for Compound Governance Account
+type CompGovAccount @entity {
+  id: ID! # Unique identifier for the account
+  balance: BigInt! # Current balance of the account
+  totalApprovals: BigInt! # Total approvals made by the account
+  totalTransfers: BigInt! # Total transfers involving the account
+  delegatedVotes: BigInt! # Votes delegated by the account
+  delegate: Bytes! # Current delegate of the account
+  ownerApprovals: [CompGovApproval!]! @derivedFrom(field: "ownerAccount") # Approvals made by this account
+  involvedTransfersFrom: [CompGovTransfer!]! @derivedFrom(field: "fromAccount") # Transfers where this account is the sender
+  involvedTransfersTo: [CompGovTransfer!]! @derivedFrom(field: "toAccount") # Transfers where this account is the receiver
+}
+
+# Entity type for UniGovTransfer
+type UniGovTransfer @entity {
+  id: ID! # Unique identifier for the transfer
+  from: Bytes! # Sender of the transfer
+  to: Bytes! # Receiver of the transfer
+  amount: BigInt! # Amount transferred
+  blockNumber: BigInt! # Block number when the transfer occurred
+  blockTimestamp: BigInt! # Timestamp when the transfer occurred
+  fromAccount: [UniGovAccount!] @derivedFrom(field: "involvedTransfersFrom") # Account entity for the sender
+  toAccount: [UniGovAccount!] @derivedFrom(field: "involvedTransfersTo") # Account entity for the receiver
+}
+
+# Define an entity type for CompGovTransfer
+type CompGovTransfer @entity {
+  id: ID! # Unique identifier for the transfer
+  from: Bytes! # Sender of the transfer
+  to: Bytes! # Receiver of the transfer
+  amount: BigInt! # Amount transferred
+  blockNumber: BigInt! # Block number when the transfer occurred
+  blockTimestamp: BigInt! # Timestamp when the transfer occurred
+  fromAccount: [CompGovAccount!] @derivedFrom(field: "involvedTransfersFrom") # Account entity for the sender
+  toAccount: [CompGovAccount!] @derivedFrom(field: "involvedTransfersTo") # Account entity for the receiver
+}
+
+# Define an entity type for UniGovApproval
+type UniGovApproval @entity {
+  id: ID! # Unique identifier for the approval
+  ownerAccount: UniGovAccount! # Changed to reference the UniGovAccount entity
+  spender: Bytes! # Spender of the approval
+  amount: BigInt! # Approved amount
+  blockNumber: BigInt! # Block number when the approval occurred
+  blockTimestamp: BigInt! # Timestamp when the approval occurred
+}
+
+# Define an entity type for CompGovApproval
+type CompGovApproval @entity {
+  id: ID! # Unique identifier for the approval
+  ownerAccount: CompGovAccount! # Changed to reference the UniGovAccount entity
+  spender: Bytes! # Spender of the approval
+  amount: BigInt! # Approved amount
+  blockNumber: BigInt! # Block number when the approval occurred
+  blockTimestamp: BigInt! # Timestamp when the approval occurred
+}
+
+# Define an entity type for UniGovDelegateChanged
+type UniGovDelegateChanged @entity {
+  id: ID! # Unique identifier for the delegate change
+  delegator: Bytes! # Delegator involved in the change
+  fromDelegate: Bytes! # Previous delegate
+  toDelegate: Bytes! # New delegate
+  blockNumber: BigInt! # Block number when the change occurred
+  blockTimestamp: BigInt! # Timestamp when the change occurred
+}
+
+# Entity type for Compound Governance Delegate Changed
+type CompGovDelegateChanged @entity {
+  id: ID! # Unique identifier for the delegate change
+  delegator: Bytes! # Delegator involved in the change
+  fromDelegate: Bytes! # Previous delegate
+  toDelegate: Bytes! # New delegate
+  blockNumber: BigInt! # Block number when the change occurred
+  blockTimestamp: BigInt! # Timestamp when the change occurred
+}
+
+# Entity type for Uniswap Governance Delegate Votes Changed
+type UniGovDelegateVotesChanged @entity {
+  id: ID! # Unique identifier for the delegate votes change
+  delegate: Bytes! # Delegate whose votes changed
+  previousBalance: BigInt! # Previous balance of votes
+  newBalance: BigInt! # New balance of votes
+  blockNumber: BigInt! # Block number when the change occurred
+  blockTimestamp: BigInt! # Timestamp when the change occurred
+}
+
+# Entity type for Compound Governance Delegate Votes Changed
+type CompGovDelegateVotesChanged @entity {
+  id: ID! # Unique identifier for the delegate votes change
+  delegate: Bytes! # Delegate whose votes changed
+  previousBalance: BigInt! # Previous balance of votes
+  newBalance: BigInt! # New balance of votes
+  blockNumber: BigInt! # Block number when the change occurred
+  blockTimestamp: BigInt! # Timestamp when the change occurred
+}
