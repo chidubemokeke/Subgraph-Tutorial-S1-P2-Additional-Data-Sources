@@ -560,17 +560,21 @@ export class UniGovApproval extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get ownerAccount(): string {
+  get ownerAccount(): string | null {
     let value = this.get("ownerAccount");
     if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
+      return null;
     } else {
       return value.toString();
     }
   }
 
-  set ownerAccount(value: string) {
-    this.set("ownerAccount", Value.fromString(value));
+  set ownerAccount(value: string | null) {
+    if (!value) {
+      this.unset("ownerAccount");
+    } else {
+      this.set("ownerAccount", Value.fromString(<string>value));
+    }
   }
 
   get spender(): Bytes {
@@ -667,17 +671,21 @@ export class CompGovApproval extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get ownerAccount(): string {
+  get ownerAccount(): string | null {
     let value = this.get("ownerAccount");
     if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
+      return null;
     } else {
       return value.toString();
     }
   }
 
-  set ownerAccount(value: string) {
-    this.set("ownerAccount", Value.fromString(value));
+  set ownerAccount(value: string | null) {
+    if (!value) {
+      this.unset("ownerAccount");
+    } else {
+      this.set("ownerAccount", Value.fromString(<string>value));
+    }
   }
 
   get spender(): Bytes {

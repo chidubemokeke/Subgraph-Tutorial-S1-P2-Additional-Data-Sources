@@ -50,7 +50,7 @@ type CompGovTransfer @entity {
 # Define an entity type for UniGovApproval
 type UniGovApproval @entity {
   id: ID! # Unique identifier for the approval
-  ownerAccount: UniGovAccount! # Changed to reference the UniGovAccount entity
+  ownerAccount: UniGovAccount # Changed to reference the UniGovAccount entity
   spender: Bytes! # Spender of the approval
   amount: BigInt! # Approved amount
   blockNumber: BigInt! # Block number when the approval occurred
@@ -60,7 +60,7 @@ type UniGovApproval @entity {
 # Define an entity type for CompGovApproval
 type CompGovApproval @entity {
   id: ID! # Unique identifier for the approval
-  ownerAccount: CompGovAccount! # Changed to reference the UniGovAccount entity
+  ownerAccount: CompGovAccount # Changed to reference the UniGovAccount entity
   spender: Bytes! # Spender of the approval
   amount: BigInt! # Approved amount
   blockNumber: BigInt! # Block number when the approval occurred
