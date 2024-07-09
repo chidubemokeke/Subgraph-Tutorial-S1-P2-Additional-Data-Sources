@@ -1,12 +1,13 @@
 # Subgraph Masterclass - Part 2: Additional Data Sources
 
-Welcome to Part 2 of our Subgraph Masterclass series! In this tutorial, we will continue building on the foundational concepts covered in Part 1. If you haven't completed Part 1 yet, please do so before proceeding with this tutorial.
+Welcome to Part 2 of the Subgraph Development Masterclass for Beginners. In this tutorial, we will build upon the foundational knowledge from Part 1 and explore how to incorporate additional data sources into your subgraph. we will leverage The Graph Studio to create a subgraph that indexes events from multiple data sources on the Ethereum blockchain focusing on governance contracts as a use case.
 
 ## Objectives
 
-- **Understand Data Sources**: Learn how to handle multiple data sources in a subgraph.
+- **Understand Data Sources**: Learn how to integrate multiple data sources into your subgraph using The Graph.
 - **Implement Event Handlers**: Create event handlers for various contract events.
-- **Utilize Helper Functions**: Explore and implement helper functions for managing entities and event data.
+- **Utilize Helper Functions**: Understand the importance of helper functions by exploring and implementing helper functions for managing entity creation and retrieval.
+- \*\*
 
 ## Setup
 
@@ -27,3 +28,18 @@ git clone https://github.com/chidubemokeke/Subgraph-Masterclass-S1-P2-Data-Sourc
 cd repository
 
 ```
+
+## Install Dependencies
+
+Install project dependencies using Yarn:
+
+```bash
+yarn install
+
+```
+
+## Implementation
+
+1. Subgraph Definition
+
+The subgraph is designed to index and query events from both Uniswap Governance and Compound Governance contracts. Here’s how we define our schema and mappings

@@ -1,14 +1,24 @@
-import { Bytes, BigInt, ethereum } from "@graphprotocol/graph-ts";
-import {
-  UniGovAccount,
-  UniGovApproval,
-  UniGovDelegateChanged,
-  UniGovDelegateVotesChanged,
-  UniGovTransfer,
-} from "../../generated/schema";
+import { BigInt, Address, log } from "@graphprotocol/graph-ts";
+import { UniGovAccount, UniGovTransfer } from "../../generated/schema"; // Importing generated schema entities
+
+// Helper function to load or create UniGovAccount entity
+export function loadOrCreateUniGovAccount(
+  accountAddress: Address
+): UniGovAccount {
+  let account = UniGovAccount.load(accountAddress.toHex());
+  if (!account) {
+    account = new UniGovAccount(accountAddress.toHex());
+    account.balance = BigInt.fromI32(0);
+    account.totalApprovals = BigInt.fromI32(0);
+    account.totalTransfers = BigInt.fromI32(0);
+    account.delegatedVotes = BigInt.fromI32(0);
+    account.delegate = accountAddress; // Set delegate field
+  }
+  return account as UniGovAccount;
+}
 
 // Helper function to get or create a UniGovAccount entity
-export function getOrCreateUniGovAccount(
+/**export function getOrCreateUniGovAccount(
   id: string,
   delegate: Bytes
 ): UniGovAccount {
@@ -125,4 +135,4 @@ export function createUniGovTransferEntity(
   transfer.blockNumber = blockNumber; // Set the block number of the transfer
   transfer.blockTimestamp = blockTimestamp; // Set the block timestamp of the transfer
   transfer.save(); // Save the created UniGovTransfer entity to the store
-}
+}**/

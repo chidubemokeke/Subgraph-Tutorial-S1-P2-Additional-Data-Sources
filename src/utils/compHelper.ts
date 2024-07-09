@@ -1,4 +1,22 @@
-import { Bytes, BigInt, ethereum } from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { CompGovAccount } from "../../generated/schema";
+
+// Helper function to get or create a CompGovAccount entity
+export function loadOrCreateCompGovAccount(
+  accountAddress: Address
+): CompGovAccount {
+  let account = CompGovAccount.load(accountAddress.toHex());
+  if (!account) {
+    account = new CompGovAccount(accountAddress.toHex());
+    account.balance = BigInt.fromI32(0);
+    account.totalApprovals = BigInt.fromI32(0);
+    account.totalTransfers = BigInt.fromI32(0);
+    account.delegatedVotes = BigInt.fromI32(0);
+    account.delegate = accountAddress; // Set delegate field
+  }
+  return account as CompGovAccount;
+}
+/**import { Bytes, BigInt, ethereum } from "@graphprotocol/graph-ts";
 import {
   CompGovAccount,
   CompGovApproval,
