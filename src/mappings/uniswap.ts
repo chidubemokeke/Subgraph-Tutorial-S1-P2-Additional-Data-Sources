@@ -12,7 +12,7 @@ import {
   createUniGovDelegateChanged,
   createUniGovDelegateVotesChanged,
   createUniGovTransferEntity,
-} from "../utils/unihelper";
+} from "../utils/uniHelper";
 
 // Event handler for Transfer events
 export function handleTransfer(event: TransferEvent): void {
