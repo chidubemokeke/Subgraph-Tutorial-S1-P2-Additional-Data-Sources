@@ -1,10 +1,8 @@
-import { BigInt, Address, log } from "@graphprotocol/graph-ts";
-import { UniGovAccount, UniGovTransfer } from "../../generated/schema"; // Importing generated schema entities
+import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { UniGovAccount, CompGovAccount } from "../../generated/schema"; // Importing generated schema entities
 
-// Helper function to load or create UniGovAccount entity
-export function loadOrCreateUniGovAccount(
-  accountAddress: Address
-): UniGovAccount {
+// Create or load an account for Uniswap Governance
+export function createOrLoadUniAccount(accountAddress: Address): UniGovAccount {
   let account = UniGovAccount.load(accountAddress.toHex());
   if (!account) {
     account = new UniGovAccount(accountAddress.toHex());
@@ -14,7 +12,26 @@ export function loadOrCreateUniGovAccount(
     account.delegatedVotes = BigInt.fromI32(0);
     account.delegate = accountAddress; // Set delegate field
   }
-  return account as UniGovAccount;
+  return account;
+}
+
+// Function to create or load an account for Compound Governance
+export function createOrLoadCompAccount(
+  accountAddress: Address
+): CompGovAccount {
+  // Attempt to load the account from the store
+  let account = CompGovAccount.load(accountAddress.toHex());
+  // If the account does not exist, create a new one
+  if (account == null) {
+    account = new CompGovAccount(accountAddress.toHex());
+    account.balance = BigInt.fromI32(0);
+    account.totalApprovals = BigInt.fromI32(0);
+    account.totalTransfers = BigInt.fromI32(0);
+    account.delegatedVotes = BigInt.fromI32(0);
+    account.delegate = accountAddress; // Set delegate field
+  }
+  // Return the account (either loaded or newly created)
+  return account;
 }
 
 // Helper function to get or create a UniGovAccount entity

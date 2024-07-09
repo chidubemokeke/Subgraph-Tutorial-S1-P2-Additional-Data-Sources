@@ -1,4 +1,4 @@
-import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
+/**import { Address, BigInt, Bytes } from "@graphprotocol/graph-ts";
 import { CompGovAccount } from "../../generated/schema";
 
 // Helper function to get or create a CompGovAccount entity

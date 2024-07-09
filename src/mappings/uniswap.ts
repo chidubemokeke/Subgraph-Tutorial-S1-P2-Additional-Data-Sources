@@ -1,12 +1,10 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import {
-  UniGovAccount,
   UniGovApproval,
   UniGovDelegateChanged,
   UniGovDelegateVotesChanged,
   UniGovTransfer,
 } from "../../generated/schema"; // Importing generated schema entities
-
 import {
   Approval as ApprovalEvent,
   DelegateChanged as DelegateChangedEvent,
@@ -14,9 +12,85 @@ import {
   Transfer as TransferEvent,
 } from "../../generated/UniGovernance/UniGovernance"; // Importing specific event types from generated artifacts
 
-import { loadOrCreateUniGovAccount } from "../utils/uniHelper";
+import { createOrLoadUniAccount } from "../utils/helpers";
 
-// Handler function for UniGovApproval events
+// Handler for the Approval event
+export function handleApproval(event: ApprovalEvent): void {
+  // Load or create the owner account
+  let ownerAccount = createOrLoadUniAccount(event.params.owner);
+  // Increment the total number of approvals for this account
+  ownerAccount.totalApprovals = ownerAccount.totalApprovals.plus(
+    BigInt.fromI32(1)
+  ); // Convert 1 to BigInt
+  ownerAccount.save();
+
+  // Create a new approval entity
+  let approval = new UniGovApproval(event.transaction.hash.toHex());
+  approval.ownerAccount = ownerAccount.id;
+  approval.spender = event.params.spender;
+  approval.amount = event.params.amount;
+  approval.blockNumber = event.block.number;
+  approval.blockTimestamp = event.block.timestamp;
+  approval.save();
+}
+
+// Handler for the DelegateChanged event
+export function handleDelegateChanged(event: DelegateChangedEvent): void {
+  // Create a new delegate change entity
+  let delegateChange = new UniGovDelegateChanged(
+    event.transaction.hash.toHex()
+  );
+  delegateChange.delegator = event.params.delegator;
+  delegateChange.fromDelegate = event.params.fromDelegate;
+  delegateChange.toDelegate = event.params.toDelegate;
+  delegateChange.blockNumber = event.block.number;
+  delegateChange.blockTimestamp = event.block.timestamp;
+  delegateChange.save();
+}
+
+// Handler for the DelegateVotesChanged event
+export function handleDelegateVotesChanged(
+  event: DelegateVotesChangedEvent
+): void {
+  // Create a new delegate votes change entity
+  let delegateVotesChange = new UniGovDelegateVotesChanged(
+    event.transaction.hash.toHex()
+  );
+  delegateVotesChange.delegate = event.params.delegate;
+  delegateVotesChange.previousBalance = event.params.previousBalance;
+  delegateVotesChange.newBalance = event.params.newBalance;
+  delegateVotesChange.blockNumber = event.block.number;
+  delegateVotesChange.blockTimestamp = event.block.timestamp;
+  delegateVotesChange.save();
+}
+
+// Handler for the Transfer event
+export function handleTransfer(event: TransferEvent): void {
+  // Load or create the sender account
+  let fromAccount = createOrLoadUniAccount(event.params.from);
+  fromAccount.totalTransfers = fromAccount.totalTransfers.plus(
+    BigInt.fromI32(1)
+  );
+  fromAccount.balance = fromAccount.balance.minus(event.params.amount);
+  fromAccount.save();
+
+  // Load or create the recipient account
+  let toAccount = createOrLoadUniAccount(event.params.to);
+  toAccount.totalTransfers = toAccount.totalTransfers.plus(BigInt.fromI32(1));
+  toAccount.balance = toAccount.balance.plus(event.params.amount);
+  toAccount.save();
+
+  // Create a new transfer entity
+  let transfer = new UniGovTransfer(event.transaction.hash.toHex());
+  transfer.fromAccount = fromAccount.id;
+  transfer.toAccount = toAccount.id;
+  transfer.amount = event.params.amount;
+  transfer.blockNumber = event.block.number;
+  transfer.blockTimestamp = event.block.timestamp;
+  transfer.save();
+}
+
+/**Handler function for UniGovApproval events
 export function handleApproval(event: ApprovalEvent): void {
   // Generate a unique ID for UniGovApproval entity using transaction hash and log index
   let approvalId =

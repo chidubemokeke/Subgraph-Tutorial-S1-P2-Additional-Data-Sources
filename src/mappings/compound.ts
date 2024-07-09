@@ -1,6 +1,5 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 import {
-  CompGovAccount,
   CompGovApproval,
   CompGovDelegateChanged,
   CompGovDelegateVotesChanged,
@@ -14,80 +13,82 @@ import {
   Transfer as TransferEvent,
 } from "../../generated/CompoundGovernance/CompoundGovernance";
 
-import { loadOrCreateCompGovAccount } from "../utils/compHelper";
+import { createOrLoadCompAccount } from "../utils/helpers";
 
-// Handler function for CompGovApproval events
+// Handler for the Approval event
 export function handleApproval(event: ApprovalEvent): void {
-  let approval = new CompGovApproval(
-    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  // Load or create the owner account
+  let ownerAccount = createOrLoadCompAccount(event.params.owner);
+  // Increment the total number of approvals for this account
+  ownerAccount.totalApprovals = ownerAccount.totalApprovals.plus(
+    BigInt.fromI32(1)
   );
-  approval.ownerAccount = event.params.owner.toHex();
+  ownerAccount.save();
+
+  // Create a new approval entity
+  let approval = new CompGovApproval(event.transaction.hash.toHex());
+  approval.ownerAccount = ownerAccount.id;
   approval.spender = event.params.spender;
   approval.amount = event.params.amount;
   approval.blockNumber = event.block.number;
   approval.blockTimestamp = event.block.timestamp;
-
   approval.save();
-
-  let account = loadOrCreateCompGovAccount(event.params.owner);
-  account.totalApprovals = account.totalApprovals.plus(BigInt.fromI32(1));
-  account.save();
 }
 
-// Handler function for CompGovDelegateChanged events
+// Handler for the DelegateChanged event
 export function handleDelegateChanged(event: DelegateChangedEvent): void {
-  let delegateChanged = new CompGovDelegateChanged(
-    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  // Create a new delegate change entity
+  let delegateChange = new CompGovDelegateChanged(
+    event.transaction.hash.toHex()
   );
-  delegateChanged.delegator = event.params.delegator;
-  delegateChanged.fromDelegate = event.params.fromDelegate;
-  delegateChanged.toDelegate = event.params.toDelegate;
-  delegateChanged.blockNumber = event.block.number;
-  delegateChanged.blockTimestamp = event.block.timestamp;
-
-  delegateChanged.save();
+  delegateChange.delegator = event.params.delegator;
+  delegateChange.fromDelegate = event.params.fromDelegate;
+  delegateChange.toDelegate = event.params.toDelegate;
+  delegateChange.blockNumber = event.block.number;
+  delegateChange.blockTimestamp = event.block.timestamp;
+  delegateChange.save();
 }
 
-// Handler function for CompGovDelegateVotesChanged events
+// Handler for the DelegateVotesChanged event
 export function handleDelegateVotesChanged(
   event: DelegateVotesChangedEvent
 ): void {
-  let delegateVotesChanged = new CompGovDelegateVotesChanged(
-    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+  // Create a new delegate votes change entity
+  let delegateVotesChange = new CompGovDelegateVotesChanged(
+    event.transaction.hash.toHex()
   );
-  delegateVotesChanged.delegate = event.params.delegate;
-  delegateVotesChanged.previousBalance = event.params.previousBalance;
-  delegateVotesChanged.newBalance = event.params.newBalance;
-  delegateVotesChanged.blockNumber = event.block.number;
-  delegateVotesChanged.blockTimestamp = event.block.timestamp;
-
-  delegateVotesChanged.save();
+  delegateVotesChange.delegate = event.params.delegate;
+  delegateVotesChange.previousBalance = event.params.previousBalance;
+  delegateVotesChange.newBalance = event.params.newBalance;
+  delegateVotesChange.blockNumber = event.block.number;
+  delegateVotesChange.blockTimestamp = event.block.timestamp;
+  delegateVotesChange.save();
 }
 
-// Handler function for CompGovTransfer events
+// Handler for the Transfer event
 export function handleTransfer(event: TransferEvent): void {
-  let transfer = new CompGovTransfer(
-    event.transaction.hash.toHex() + "-" + event.logIndex.toString()
-  );
-  transfer.fromAccount = event.params.from.toHex();
-  transfer.toAccount = event.params.to.toHex();
-  transfer.amount = event.params.amount;
-  transfer.blockNumber = event.block.number;
-  transfer.blockTimestamp = event.block.timestamp;
-
-  transfer.save();
-
-  let fromAccount = loadOrCreateCompGovAccount(event.params.from);
-  fromAccount.balance = fromAccount.balance.minus(event.params.amount);
+  // Load or create the sender account
+  let fromAccount = createOrLoadCompAccount(event.params.from);
   fromAccount.totalTransfers = fromAccount.totalTransfers.plus(
     BigInt.fromI32(1)
   );
+  fromAccount.balance = fromAccount.balance.minus(event.params.amount);
   fromAccount.save();
 
-  let toAccount = loadOrCreateCompGovAccount(event.params.to);
-  toAccount.balance = toAccount.balance.plus(event.params.amount);
+  // Load or create the recipient account
+  let toAccount = createOrLoadCompAccount(event.params.to);
   toAccount.totalTransfers = toAccount.totalTransfers.plus(BigInt.fromI32(1));
+  toAccount.balance = toAccount.balance.plus(event.params.amount);
   toAccount.save();
+
+  // Create a new transfer entity
+  let transfer = new CompGovTransfer(event.transaction.hash.toHex());
+  transfer.fromAccount = fromAccount.id;
+  transfer.toAccount = toAccount.id;
+  transfer.amount = event.params.amount;
+  transfer.blockNumber = event.block.number;
+  transfer.blockTimestamp = event.block.timestamp;
+  transfer.save();
 }
 
 /**import { Bytes } from "@graphprotocol/graph-ts";
