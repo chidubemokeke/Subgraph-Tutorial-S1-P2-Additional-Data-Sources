@@ -864,8 +864,8 @@ export class CompGovDelegateChanged extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get delegator(): Bytes {
-    let value = this.get("delegator");
+  get delegate(): Bytes {
+    let value = this.get("delegate");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -873,8 +873,8 @@ export class CompGovDelegateChanged extends Entity {
     }
   }
 
-  set delegator(value: Bytes) {
-    this.set("delegator", Value.fromBytes(value));
+  set delegate(value: Bytes) {
+    this.set("delegate", Value.fromBytes(value));
   }
 
   get fromDelegate(): Bytes {
@@ -1146,6 +1146,208 @@ export class CompGovTransfer extends Entity {
 
   set blockTimestamp(value: BigInt) {
     this.set("blockTimestamp", Value.fromBigInt(value));
+  }
+}
+
+export class VoteBalance extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save VoteBalance entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type VoteBalance must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("VoteBalance", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): VoteBalance | null {
+    return changetype<VoteBalance | null>(
+      store.get_in_block("VoteBalance", id),
+    );
+  }
+
+  static load(id: string): VoteBalance | null {
+    return changetype<VoteBalance | null>(store.get("VoteBalance", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get voter(): Bytes | null {
+    let value = this.get("voter");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set voter(value: Bytes | null) {
+    if (!value) {
+      this.unset("voter");
+    } else {
+      this.set("voter", Value.fromBytes(<Bytes>value));
+    }
+  }
+
+  get balance(): BigInt {
+    let value = this.get("balance");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set balance(value: BigInt) {
+    this.set("balance", Value.fromBigInt(value));
+  }
+
+  get yesVotes(): BigInt {
+    let value = this.get("yesVotes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set yesVotes(value: BigInt) {
+    this.set("yesVotes", Value.fromBigInt(value));
+  }
+
+  get noVotes(): BigInt {
+    let value = this.get("noVotes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set noVotes(value: BigInt) {
+    this.set("noVotes", Value.fromBigInt(value));
+  }
+
+  get abstainVotes(): BigInt {
+    let value = this.get("abstainVotes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set abstainVotes(value: BigInt) {
+    this.set("abstainVotes", Value.fromBigInt(value));
+  }
+
+  get totalApprovals(): BigInt {
+    let value = this.get("totalApprovals");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalApprovals(value: BigInt) {
+    this.set("totalApprovals", Value.fromBigInt(value));
+  }
+
+  get totalTransfers(): BigInt {
+    let value = this.get("totalTransfers");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalTransfers(value: BigInt) {
+    this.set("totalTransfers", Value.fromBigInt(value));
+  }
+
+  get delegatedVotes(): BigInt {
+    let value = this.get("delegatedVotes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set delegatedVotes(value: BigInt) {
+    this.set("delegatedVotes", Value.fromBigInt(value));
+  }
+
+  get delegate(): Bytes {
+    let value = this.get("delegate");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set delegate(value: Bytes) {
+    this.set("delegate", Value.fromBytes(value));
+  }
+
+  get approvals(): Array<Bytes> {
+    let value = this.get("approvals");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytesArray();
+    }
+  }
+
+  set approvals(value: Array<Bytes>) {
+    this.set("approvals", Value.fromBytesArray(value));
+  }
+
+  get transfersSent(): Array<Bytes> {
+    let value = this.get("transfersSent");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytesArray();
+    }
+  }
+
+  set transfersSent(value: Array<Bytes>) {
+    this.set("transfersSent", Value.fromBytesArray(value));
+  }
+
+  get transfersReceived(): Array<Bytes> {
+    let value = this.get("transfersReceived");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBytesArray();
+    }
+  }
+
+  set transfersReceived(value: Array<Bytes>) {
+    this.set("transfersReceived", Value.fromBytesArray(value));
   }
 }
 

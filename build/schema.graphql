@@ -77,7 +77,7 @@ type CompGovApproval @entity {
 # Define the schema for CompGovDelegateChanged entity
 type CompGovDelegateChanged @entity {
   id: ID! # Unique identifier for the delegate change event
-  delegator: Bytes! # Address of the delegator
+  delegate: Bytes! # Address of the delegator
   fromDelegate: Bytes! # Address of the previous delegate
   toDelegate: Bytes! # Address of the new delegate
   blockNumber: BigInt! # Block number in which the delegate change event occurred
@@ -102,4 +102,21 @@ type CompGovTransfer @entity {
   amount: BigInt! # Amount transferred
   blockNumber: BigInt! # Block number in which the transfer event occurred
   blockTimestamp: BigInt! # Timestamp of the block in which the transfer event occurred
+}
+
+# Define the schema for VoteBalance entity
+type VoteBalance @entity {
+  id: ID! # Unique identifier for the entity
+  voter: Bytes # Address of the voter
+  balance: BigInt! # Current voting power balance of the voter
+  yesVotes: BigInt! # Total Yes votes by this voter
+  noVotes: BigInt! # Total No votes by this voter
+  abstainVotes: BigInt! # Total Abstain votes by this voter
+  totalApprovals: BigInt! # Total number of approvals by this voter
+  totalTransfers: BigInt! # Total number of transfers by this voter
+  delegatedVotes: BigInt! # Total votes delegated by this voter
+  delegate: Bytes! # Address of the delegate this voter has delegated votes to
+  approvals: [Bytes!]! # List of addresses this voter has approved
+  transfersSent: [Bytes!]! # List of addresses this voter has sent transfers to
+  transfersReceived: [Bytes!]! # List of addresses this voter has received transfers from
 }

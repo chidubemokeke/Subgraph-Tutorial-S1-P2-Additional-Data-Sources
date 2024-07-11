@@ -1,26 +1,24 @@
 import { BigInt, Address, Bytes } from "@graphprotocol/graph-ts";
 import {
-  CompGovAccount,
-  CompGovApproval,
-  CompGovTransfer,
-  CompGovDelegateChanged,
-  CompGovDelegateVotesChanged,
-  VoteBalance as CompVoteBalance,
+  UniGovAccount,
+  UniGovApproval,
+  UniGovTransfer,
+  UniGovDelegateChanged,
+  UniGovDelegateVotesChanged,
+  VoteBalance as UniVoteBalance,
 } from "../../generated/schema";
 import {
   Approval as ApprovalEvent,
   Transfer as TransferEvent,
   DelegateChanged as DelegateChangedEvent,
   DelegateVotesChanged as DelegateVotesChangedEvent,
-} from "../../generated/CompoundGovernance/CompoundGovernance";
+} from "../../generated/UniGovernance/UniGovernance";
 
-// Helper function to create or load an account for CompGov
-export function createOrLoadCompAccount(
-  accountAddress: Address
-): CompGovAccount {
-  let account = CompGovAccount.load(accountAddress.toHex());
+// Helper function to create or load an account for UniGov
+export function createOrLoadUniAccount(accountAddress: Address): UniGovAccount {
+  let account = UniGovAccount.load(accountAddress.toHex());
   if (!account) {
-    account = new CompGovAccount(accountAddress.toHex());
+    account = new UniGovAccount(accountAddress.toHex());
     account.balance = BigInt.fromI32(0);
     account.totalApprovals = BigInt.fromI32(0);
     account.totalTransfers = BigInt.fromI32(0);
@@ -33,40 +31,40 @@ export function createOrLoadCompAccount(
       "0x0000000000000000000000000000000000000000"
     ) as Bytes; // Ensure delegate is set to zero address if uninitialized
   }
-  return account as CompGovAccount;
+  return account as UniGovAccount;
 }
 
-// Helper function to create or load a VoteBalance entity for CompGov
+// Helper function to create or load a VoteBalance entity for UniGov
 export function createOrLoadVoteBalance(
   accountAddress: Address,
   entityName: string
-): CompVoteBalance {
-  let voteBalance: CompVoteBalance;
-  voteBalance = CompVoteBalance.load(accountAddress.toHex()) as CompVoteBalance;
+): UniVoteBalance {
+  let voteBalance: UniVoteBalance;
+  voteBalance = UniVoteBalance.load(accountAddress.toHex()) as UniVoteBalance;
   if (!voteBalance) {
-    voteBalance = new CompVoteBalance(accountAddress.toHex());
+    voteBalance = new UniVoteBalance(accountAddress.toHex());
     voteBalance.balance = BigInt.fromI32(0);
     voteBalance.delegatedVotes = BigInt.fromI32(0);
     voteBalance.yesVotes = BigInt.fromI32(0); // Initialize yesVotes
-    // Initialize other fields as needed for CompGov
+    // Initialize other fields as needed for UniGov
   }
   return voteBalance;
 }
 
-// Helper function to handle CompGovApproval event
-export function handleCompGovApproval(event: ApprovalEvent): void {
+// Helper function to handle UniGovApproval event
+export function handleUniGovApproval(event: ApprovalEvent): void {
   // Generate a unique ID for the approval event
   let approvalId =
     event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
   // Create a new approval entity
-  let approval = new CompGovApproval(approvalId);
+  let approval = new UniGovApproval(approvalId);
 
-  // Load or create the CompGovAccount entity for the owner of the approval
-  let ownerAccount = createOrLoadCompAccount(event.params.owner);
+  // Load or create the UniGovAccount entity for the owner of the approval
+  let ownerAccount = createOrLoadUniAccount(event.params.owner);
 
   // Update VoteBalance entity for the owner of the approval
-  let ownerVoteBalance = createOrLoadVoteBalance(event.params.owner, "CompGov");
+  let ownerVoteBalance = createOrLoadVoteBalance(event.params.owner, "UniGov");
   ownerVoteBalance.totalApprovals = ownerVoteBalance.totalApprovals.plus(
     BigInt.fromI32(1)
   );
@@ -87,22 +85,22 @@ export function handleCompGovApproval(event: ApprovalEvent): void {
   approval.save();
 }
 
-// Helper function to handle CompGovTransfer event
-export function handleCompGovTransfer(event: TransferEvent): void {
+// Helper function to handle UniGovTransfer event
+export function handleUniGovTransfer(event: TransferEvent): void {
   // Generate a unique ID for the transfer event
   let transferId =
     event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
   // Create a new transfer entity
-  let transfer = new CompGovTransfer(transferId);
+  let transfer = new UniGovTransfer(transferId);
 
-  // Load or create the CompGovAccount entities for the sender and receiver
-  let senderAccount = createOrLoadCompAccount(event.params.from);
-  let receiverAccount = createOrLoadCompAccount(event.params.to);
+  // Load or create the UniGovAccount entities for the sender and receiver
+  let senderAccount = createOrLoadUniAccount(event.params.from);
+  let receiverAccount = createOrLoadUniAccount(event.params.to);
 
   // Update VoteBalance entities for the sender and receiver
-  let senderVoteBalance = createOrLoadVoteBalance(event.params.from, "CompGov");
-  let receiverVoteBalance = createOrLoadVoteBalance(event.params.to, "CompGov");
+  let senderVoteBalance = createOrLoadVoteBalance(event.params.from, "UniGov");
+  let receiverVoteBalance = createOrLoadVoteBalance(event.params.to, "UniGov");
   senderVoteBalance.totalTransfers = senderVoteBalance.totalTransfers.plus(
     BigInt.fromI32(1)
   );
@@ -139,35 +137,33 @@ export function handleCompGovTransfer(event: TransferEvent): void {
   transfer.save();
 }
 
-// Helper function to handle CompGovDelegateChanged event
-export function handleCompGovDelegateChanged(
-  event: DelegateChangedEvent
-): void {
+// Helper function to handle UniGovDelegateChanged event
+export function handleUniGovDelegateChanged(event: DelegateChangedEvent): void {
   // Create a unique ID for the delegate changed event
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
   // Create a new delegate changed entity
-  let delegateChanged = new CompGovDelegateChanged(id);
-  delegateChanged.delegate = event.params.delegator;
+  let delegateChanged = new UniGovDelegateChanged(id);
+  delegateChanged.delegator = event.params.delegator;
   delegateChanged.fromDelegate = event.params.fromDelegate;
   delegateChanged.toDelegate = event.params.toDelegate;
   delegateChanged.blockNumber = event.block.number;
   delegateChanged.blockTimestamp = event.block.timestamp;
   delegateChanged.save();
 
-  // Update delegate field in CompGovAccount entities
-  let delegatorAccount = createOrLoadCompAccount(event.params.delegator);
+  // Update delegate field in UniGovAccount entities
+  let delegatorAccount = createOrLoadUniAccount(event.params.delegator);
   delegatorAccount.delegate = event.params.toDelegate;
   delegatorAccount.save();
 
   // Update VoteBalance entities for from and to delegates
   let fromVoteBalance = createOrLoadVoteBalance(
     event.params.fromDelegate,
-    "CompGov"
+    "UniGov"
   );
   let toVoteBalance = createOrLoadVoteBalance(
     event.params.toDelegate,
-    "CompGov"
+    "UniGov"
   );
 
   // Adjust the vote balances based on your contract's logic
@@ -183,15 +179,15 @@ export function handleCompGovDelegateChanged(
   toVoteBalance.save();
 }
 
-// Helper function to handle CompGovDelegateVotesChanged event
-export function handleCompGovDelegateVotesChanged(
+// Helper function to handle UniGovDelegateVotesChanged event
+export function handleUniGovDelegateVotesChanged(
   event: DelegateVotesChangedEvent
 ): void {
   // Create a unique ID for the delegate votes changed event
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
   // Create a new delegate votes changed entity
-  let delegateVotesChanged = new CompGovDelegateVotesChanged(id);
+  let delegateVotesChanged = new UniGovDelegateVotesChanged(id);
   delegateVotesChanged.delegate = event.params.delegate;
   delegateVotesChanged.previousBalance = event.params.previousBalance;
   delegateVotesChanged.newBalance = event.params.newBalance;
@@ -202,7 +198,7 @@ export function handleCompGovDelegateVotesChanged(
   // Update VoteBalance entity for the delegate
   let delegateVoteBalance = createOrLoadVoteBalance(
     event.params.delegate,
-    "CompGov"
+    "UniGov"
   );
   delegateVoteBalance.delegatedVotes = event.params.newBalance;
   delegateVoteBalance.save();

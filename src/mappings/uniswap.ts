@@ -1,4 +1,36 @@
-import { BigInt } from "@graphprotocol/graph-ts";
+import {
+  Approval as UniApprovalEvent,
+  Transfer as UniTransferEvent,
+  DelegateChanged as UniDelegateChangedEvent,
+  DelegateVotesChanged as UniDelegateVotesChangedEvent,
+} from "../../generated/UniGovernance/UniGovernance";
+
+import {
+  handleUniGovApproval,
+  handleUniGovTransfer,
+  handleUniGovDelegateChanged,
+  handleUniGovDelegateVotesChanged,
+} from "../utils/uniHelpers";
+
+export function handleApproval(event: UniApprovalEvent): void {
+  handleUniGovApproval(event);
+}
+
+export function handleDelegateChanged(event: UniDelegateChangedEvent): void {
+  handleUniGovDelegateChanged(event);
+}
+
+export function handleDelegateVotesChanged(
+  event: UniDelegateVotesChangedEvent
+): void {
+  handleUniGovDelegateVotesChanged(event);
+}
+
+export function handleTransfer(event: UniTransferEvent): void {
+  handleUniGovTransfer(event);
+}
+
+/**import { BigInt } from "@graphprotocol/graph-ts";
 import {
   UniGovApproval,
   UniGovDelegateChanged,
@@ -12,10 +44,10 @@ import {
   Transfer as TransferEvent,
 } from "../../generated/UniGovernance/UniGovernance"; // Importing specific event types from generated artifacts
 
-import { createOrLoadUniAccount } from "../utils/helpers";
+import { createOrLoadUniAccount } from "../utils/uniHelpers";
 
-// Handler for the Approval event
-export function handleApproval(event: ApprovalEvent): void {
+/**Handler for the Approval event
+ export function handleApproval(event: ApprovalEvent): void {
   // Load or create the owner account
   let ownerAccount = createOrLoadUniAccount(event.params.owner);
   // Increment the total number of approvals for this account

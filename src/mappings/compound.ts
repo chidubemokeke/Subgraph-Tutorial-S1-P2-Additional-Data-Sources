@@ -1,21 +1,36 @@
-import { BigInt } from "@graphprotocol/graph-ts";
 import {
-  CompGovApproval,
-  CompGovDelegateChanged,
-  CompGovDelegateVotesChanged,
-  CompGovTransfer,
-} from "../../generated/schema";
-
-import {
-  Approval as ApprovalEvent,
-  DelegateChanged as DelegateChangedEvent,
-  DelegateVotesChanged as DelegateVotesChangedEvent,
-  Transfer as TransferEvent,
+  Approval as CompApprovalEvent,
+  Transfer as CompTransferEvent,
+  DelegateChanged as CompDelegateChangedEvent,
+  DelegateVotesChanged as CompDelegateVotesChangedEvent,
 } from "../../generated/CompoundGovernance/CompoundGovernance";
 
-import { createOrLoadCompAccount } from "../utils/helpers";
+import {
+  handleCompGovApproval,
+  handleCompGovTransfer,
+  handleCompGovDelegateChanged,
+  handleCompGovDelegateVotesChanged,
+} from "../utils/compHelpers";
 
-// Handler for the Approval event
+export function handleApproval(event: CompApprovalEvent): void {
+  handleCompGovApproval(event);
+}
+
+export function handleDelegateChanged(event: CompDelegateChangedEvent): void {
+  handleCompGovDelegateChanged(event);
+}
+
+export function handleDelegateVotesChanged(
+  event: CompDelegateVotesChangedEvent
+): void {
+  handleCompGovDelegateVotesChanged(event);
+}
+
+export function handleTransfer(event: CompTransferEvent): void {
+  handleCompGovTransfer(event);
+}
+
+/**Handler for the Approval event
 export function handleApproval(event: ApprovalEvent): void {
   // Load or create the owner account
   let ownerAccount = createOrLoadCompAccount(event.params.owner);
