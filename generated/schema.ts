@@ -65,6 +65,22 @@ export class ProposalCreated extends Entity {
     this.set("creationId", Value.fromBigInt(value));
   }
 
+  get executed(): ProposalExecutedLoader {
+    return new ProposalExecutedLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "executed",
+    );
+  }
+
+  get canceled(): ProposalCanceledLoader {
+    return new ProposalCanceledLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "canceled",
+    );
+  }
+
   get proposer(): Bytes {
     let value = this.get("proposer");
     if (!value || value.kind == ValueKind.NULL) {
@@ -220,6 +236,14 @@ export class ProposalCreated extends Entity {
   set uniqueVoters(value: Array<Bytes>) {
     this.set("uniqueVoters", Value.fromBytesArray(value));
   }
+
+  get votes(): VoteCastLoader {
+    return new VoteCastLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "votes",
+    );
+  }
 }
 
 export class ProposalCanceled extends Entity {
@@ -276,6 +300,19 @@ export class ProposalCanceled extends Entity {
 
   set cancelId(value: BigInt) {
     this.set("cancelId", Value.fromBigInt(value));
+  }
+
+  get proposal(): string {
+    let value = this.get("proposal");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set proposal(value: string) {
+    this.set("proposal", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -372,6 +409,19 @@ export class ProposalExecuted extends Entity {
 
   set executionId(value: BigInt) {
     this.set("executionId", Value.fromBigInt(value));
+  }
+
+  get proposal(): string {
+    let value = this.get("proposal");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set proposal(value: string) {
+    this.set("proposal", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -573,17 +623,17 @@ export class VoteCast extends Entity {
     this.set("voter", Value.fromBytes(value));
   }
 
-  get proposalId(): BigInt {
+  get proposalId(): string {
     let value = this.get("proposalId");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
-      return value.toBigInt();
+      return value.toString();
     }
   }
 
-  set proposalId(value: BigInt) {
-    this.set("proposalId", Value.fromBigInt(value));
+  set proposalId(value: string) {
+    this.set("proposalId", Value.fromString(value));
   }
 
   get support(): i32 {
@@ -1026,5 +1076,59 @@ export class Transfer extends Entity {
 
   set transactionHash(value: Bytes) {
     this.set("transactionHash", Value.fromBytes(value));
+  }
+}
+
+export class ProposalExecutedLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ProposalExecuted[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ProposalExecuted[]>(value);
+  }
+}
+
+export class ProposalCanceledLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ProposalCanceled[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ProposalCanceled[]>(value);
+  }
+}
+
+export class VoteCastLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): VoteCast[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<VoteCast[]>(value);
   }
 }

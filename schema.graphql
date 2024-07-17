@@ -1,6 +1,8 @@
 type ProposalCreated @entity {
   id: ID! # Unique identifier for the proposal
   creationId: BigInt! # Unique identifier for the proposal creation event
+  executed: [ProposalExecuted!]! @derivedFrom(field: "proposal") # Proposals Executed
+  canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal")
   proposer: Bytes! # DAO account that initiated the proposal
   targets: [Bytes!]! # Array of target addresses that the proposal interacts with
   values: [BigInt!]! # Array of values (amounts) sent to the targets
@@ -13,11 +15,13 @@ type ProposalCreated @entity {
   votesAgainst: BigInt! # Number of votes against the proposal
   votesAbstain: BigInt! # Number of votes abstaining from the proposal
   uniqueVoters: [Bytes!]! # Array of unique voter addresses who voted on the proposal
+  votes: [VoteCast!]! @derivedFrom(field: "proposalId") # Array of votes cast for the proposal
 }
 
 type ProposalCanceled @entity {
   id: ID! # Unique identifier for the proposal cancellation event
   cancelId: BigInt! # Unique identifier for the cancellation
+  proposal: ProposalCreated! # Reference to the proposal that was executed
   blockNumber: BigInt! # Block number when the proposal was canceled
   blockTimestamp: BigInt! # Timestamp when the proposal was canceled
   transactionHash: Bytes! # Transaction hash for the cancellation event
@@ -26,6 +30,7 @@ type ProposalCanceled @entity {
 type ProposalExecuted @entity {
   id: ID! # Unique identifier for the proposal execution event
   executionId: BigInt! # Unique identifier for the execution
+  proposal: ProposalCreated! # Reference to the proposal that was executed
   blockNumber: BigInt! # Block number when the proposal was executed
   blockTimestamp: BigInt! # Timestamp when the proposal was executed
   transactionHash: Bytes! # Transaction hash for the execution event
@@ -43,7 +48,7 @@ type ProposalQueued @entity {
 type VoteCast @entity {
   id: ID! # Unique identifier for the vote cast event
   voter: Bytes! # Address of the voter
-  proposalId: BigInt! # Identifier of the proposal being voted on
+  proposalId: ProposalCreated! # Identifier of the proposals being voted on
   support: Int! # Support type (0, 1, 2)
   votes: BigInt! # Number of votes cast
   reason: String # Reason for the vote (optional)
