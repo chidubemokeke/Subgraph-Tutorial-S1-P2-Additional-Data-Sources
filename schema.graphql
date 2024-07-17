@@ -1,122 +1,83 @@
-# Define the schema for UniGovAccount entity
-type UniGovAccount @entity {
-  id: ID! # Unique identifier for the account
-  balance: BigInt! # Current balance of the account
-  totalApprovals: BigInt! # Total number of approval events for this account
-  totalTransfers: BigInt! # Total number of transfer events for this account
-  delegatedVotes: BigInt! # Total number of delegated votes for this account
-  delegate: Bytes! # Address of the delegate
-  approvals: [UniGovApproval!]! @derivedFrom(field: "ownerAccount") # List of approvals related to this account
-  transfersSent: [UniGovTransfer!]! @derivedFrom(field: "fromAccount") # List of transfers sent by this account
-  transfersReceived: [UniGovTransfer!]! @derivedFrom(field: "toAccount") # List of transfers received by this account
+type ProposalCreated @entity {
+  id: ID! # Unique identifier for the proposal
+  creationId: BigInt! # Unique identifier for the proposal creation event
+  proposer: Bytes! # DAO account that initiated the proposal
+  targets: [Bytes!]! # Array of target addresses that the proposal interacts with
+  values: [BigInt!]! # Array of values (amounts) sent to the targets
+  signatures: [String!]! # Array of function signatures called on the targets
+  calldatas: [Bytes!]! # Array of calldata bytes sent to the targets
+  startBlock: BigInt! # Block number when the proposal starts
+  endBlock: BigInt! # Block number when the proposal ends
+  description: String! # Description of the proposal
+  votesFor: BigInt! # Number of votes in favor of the proposal
+  votesAgainst: BigInt! # Number of votes against the proposal
+  votesAbstain: BigInt! # Number of votes abstaining from the proposal
+  uniqueVoters: [Bytes!]! # Array of unique voter addresses who voted on the proposal
 }
 
-# Define the schema for UniGovApproval entity
-type UniGovApproval @entity {
-  id: ID! # Unique identifier for the approval event
-  ownerAccount: UniGovAccount! # Account that issued the approval
-  spender: Bytes! # Address approved to spend the funds
-  amount: BigInt! # Amount approved
-  blockNumber: BigInt! # Block number in which the approval event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the approval event occurred
+type ProposalCanceled @entity {
+  id: ID! # Unique identifier for the proposal cancellation event
+  cancelId: BigInt! # Unique identifier for the cancellation
+  blockNumber: BigInt! # Block number when the proposal was canceled
+  blockTimestamp: BigInt! # Timestamp when the proposal was canceled
+  transactionHash: Bytes! # Transaction hash for the cancellation event
 }
 
-# Define the schema for UniGovDelegateChanged entity
-type UniGovDelegateChanged @entity {
+type ProposalExecuted @entity {
+  id: ID! # Unique identifier for the proposal execution event
+  executionId: BigInt! # Unique identifier for the execution
+  blockNumber: BigInt! # Block number when the proposal was executed
+  blockTimestamp: BigInt! # Timestamp when the proposal was executed
+  transactionHash: Bytes! # Transaction hash for the execution event
+}
+
+type ProposalQueued @entity {
+  id: ID! # Unique identifier for the proposal queue event
+  queueId: BigInt! # Unique identifier for the queue
+  eta: BigInt! # Estimated time of arrival for the queue
+  blockNumber: BigInt! # Block number when the proposal was queued
+  blockTimestamp: BigInt! # Timestamp when the proposal was queued
+  transactionHash: Bytes! # Transaction hash for the queue event
+}
+
+type VoteCast @entity {
+  id: ID! # Unique identifier for the vote cast event
+  voter: Bytes! # Address of the voter
+  proposalId: BigInt! # Identifier of the proposal being voted on
+  support: Int! # Support type (0, 1, 2)
+  votes: BigInt! # Number of votes cast
+  reason: String # Reason for the vote (optional)
+  blockNumber: BigInt! # Block number when the vote was cast
+  blockTimestamp: BigInt! # Timestamp when the vote was cast
+  transactionHash: Bytes! # Transaction hash for the vote cast event
+}
+
+type DelegateChanged @entity {
   id: ID! # Unique identifier for the delegate change event
   delegator: Bytes! # Address of the delegator
   fromDelegate: Bytes! # Address of the previous delegate
   toDelegate: Bytes! # Address of the new delegate
-  blockNumber: BigInt! # Block number in which the delegate change event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the delegate change event occurred
+  blockNumber: BigInt! # Block number when the delegate change occurred
+  blockTimestamp: BigInt! # Timestamp when the delegate change occurred
+  transactionHash: Bytes! # Transaction hash for the delegate change event
 }
 
-# Define the schema for UniGovDelegateVotesChanged entity
-type UniGovDelegateVotesChanged @entity {
+type DelegateVotesChanged @entity {
   id: ID! # Unique identifier for the delegate votes change event
-  delegate: Bytes! # Address of the delegate
-  previousBalance: BigInt! # Previous balance of votes
-  newBalance: BigInt! # New balance of votes
-  blockNumber: BigInt! # Block number in which the delegate votes change event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the delegate votes change event occurred
+  delegate: Bytes! #
+  previousBalance: BigInt! #Previous balance of the delegate's votes
+  newBalance: BigInt! # New balance of the delegate's votes
+  blockNumber: BigInt! # Block number when the votes change occurred
+  blockTimestamp: BigInt! # Timestamp when the votes change occurred
+  transactionHash: Bytes! # Transaction hash for the votes change event
 }
 
-# Define the schema for UniGovTransfer entity
-type UniGovTransfer @entity {
+type Transfer @entity {
   id: ID! # Unique identifier for the transfer event
-  fromAccount: UniGovAccount! # Account that sent the transfer
-  toAccount: UniGovAccount! # Account that received the transfer
-  amount: BigInt! # Amount transferred
-  blockNumber: BigInt! # Block number in which the transfer event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the transfer event occurred
-}
-
-# Define the schema for CompGovAccount entity
-type CompGovAccount @entity {
-  id: ID! # Unique identifier for the account
-  balance: BigInt! # Current balance of the account
-  totalApprovals: BigInt! # Total number of approval events for this account
-  totalTransfers: BigInt! # Total number of transfer events for this account
-  delegatedVotes: BigInt! # Total number of delegated votes for this account
-  delegate: Bytes! # Address of the delegate
-  approvals: [CompGovApproval!]! @derivedFrom(field: "ownerAccount") # List of approvals related to this account
-  transfersSent: [CompGovTransfer!]! @derivedFrom(field: "fromAccount") # List of transfers sent by this account
-  transfersReceived: [CompGovTransfer!]! @derivedFrom(field: "toAccount") # List of transfers received by this account
-}
-
-# Define the schema for CompGovApproval entity
-type CompGovApproval @entity {
-  id: ID! # Unique identifier for the approval event
-  ownerAccount: CompGovAccount! # Account that issued the approval
-  spender: Bytes! # Address approved to spend the funds
-  amount: BigInt! # Amount approved
-  blockNumber: BigInt! # Block number in which the approval event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the approval event occurred
-}
-
-# Define the schema for CompGovDelegateChanged entity
-type CompGovDelegateChanged @entity {
-  id: ID! # Unique identifier for the delegate change event
-  delegate: Bytes! # Address of the delegator
-  fromDelegate: Bytes! # Address of the previous delegate
-  toDelegate: Bytes! # Address of the new delegate
-  blockNumber: BigInt! # Block number in which the delegate change event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the delegate change event occurred
-}
-
-# Define the schema for CompGovDelegateVotesChanged entity
-type CompGovDelegateVotesChanged @entity {
-  id: ID! # Unique identifier for the delegate votes change event
-  delegate: Bytes! # Address of the delegate
-  previousBalance: BigInt! # Previous balance of votes
-  newBalance: BigInt! # New balance of votes
-  blockNumber: BigInt! # Block number in which the delegate votes change event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the delegate votes change event occurred
-}
-
-# Define the schema for CompGovTransfer entity
-type CompGovTransfer @entity {
-  id: ID! # Unique identifier for the transfer event
-  fromAccount: CompGovAccount! # Account that sent the transfer
-  toAccount: CompGovAccount! # Account that received the transfer
-  amount: BigInt! # Amount transferred
-  blockNumber: BigInt! # Block number in which the transfer event occurred
-  blockTimestamp: BigInt! # Timestamp of the block in which the transfer event occurred
-}
-
-# Define the schema for VoteBalance entity
-type VoteBalance @entity {
-  id: ID! # Unique identifier for the entity
-  voter: Bytes # Address of the voter
-  balance: BigInt! # Current voting power balance of the voter
-  yesVotes: BigInt! # Total Yes votes by this voter
-  noVotes: BigInt! # Total No votes by this voter
-  abstainVotes: BigInt! # Total Abstain votes by this voter
-  totalApprovals: BigInt! # Total number of approvals by this voter
-  totalTransfers: BigInt! # Total number of transfers by this voter
-  delegatedVotes: BigInt! # Total votes delegated by this voter
-  delegate: Bytes! # Address of the delegate this voter has delegated votes to
-  approvals: [Bytes!]! # List of addresses this voter has approved
-  transfersSent: [Bytes!]! # List of addresses this voter has sent transfers to
-  transfersReceived: [Bytes!]! # List of addresses this voter has received transfers from
+  from: Bytes! # Address from which the tokens are transferred
+  to: Bytes! # Address to which the tokens are transferred
+  amount: BigInt! # Amount of tokens transferred
+  blockNumber: BigInt! # Block number when the transfer occurred
+  blockTimestamp: BigInt! # Timestamp when the transfer occurred
+  transactionHash: Bytes! # Transaction hash for the transfer event
 }
