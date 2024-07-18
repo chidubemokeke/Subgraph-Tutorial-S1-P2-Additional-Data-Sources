@@ -1,5 +1,3 @@
-// Importing necessary types and classes from the @graphprotocol/graph-ts library
-import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 // Importing the schema entities DelegateChanged, DelegateVotesChanged, and Transfer
 import {
   DelegateChanged,

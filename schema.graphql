@@ -15,7 +15,7 @@ type ProposalCreated @entity {
   votesAgainst: BigInt! # Number of votes against the proposal
   votesAbstain: BigInt! # Number of votes abstaining from the proposal
   uniqueVoters: [Bytes!]! # Array of unique voter addresses who voted on the proposal
-  votes: [VoteCast!]! @derivedFrom(field: "proposalId") # Array of votes cast for the proposal
+  votes: [VoteCast!]! @derivedFrom(field: "voters") # Array of votes cast for the proposal
 }
 
 type ProposalCanceled @entity {
@@ -48,7 +48,8 @@ type ProposalQueued @entity {
 type VoteCast @entity {
   id: ID! # Unique identifier for the vote cast event
   voter: Bytes! # Address of the voter
-  proposalId: ProposalCreated! # Identifier of the proposals being voted on
+  proposalId: BigInt! # Identifier of the proposal being voted on
+  voters: ProposalCreated! # Proposal this vote is cast for
   support: Int! # Support type (0, 1, 2)
   votes: BigInt! # Number of votes cast
   reason: String # Reason for the vote (optional)

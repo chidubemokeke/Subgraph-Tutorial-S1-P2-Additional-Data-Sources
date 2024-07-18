@@ -623,8 +623,21 @@ export class VoteCast extends Entity {
     this.set("voter", Value.fromBytes(value));
   }
 
-  get proposalId(): string {
+  get proposalId(): BigInt {
     let value = this.get("proposalId");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set proposalId(value: BigInt) {
+    this.set("proposalId", Value.fromBigInt(value));
+  }
+
+  get voters(): string {
+    let value = this.get("voters");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -632,8 +645,8 @@ export class VoteCast extends Entity {
     }
   }
 
-  set proposalId(value: string) {
-    this.set("proposalId", Value.fromString(value));
+  set voters(value: string) {
+    this.set("voters", Value.fromString(value));
   }
 
   get support(): i32 {
