@@ -4,6 +4,7 @@ import {
   DelegateVotesChanged,
   Transfer,
 } from "../../generated/schema";
+
 // Importing the event classes DelegateChangedEvent, DelegateVotesChangedEvent, and TransferEvent from the generated CToken directory
 import {
   DelegateChanged as DelegateChangedEvent,
