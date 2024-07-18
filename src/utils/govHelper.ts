@@ -35,7 +35,7 @@ import {
 
 export function getOrCreateDAO(id: string): DAO {
   let dao = DAO.load(id);
-  if (dao == null) {
+  if (!dao) {
     dao = new DAO(id);
     dao.totalProposals = BigInt.fromI32(0);
     dao.totalVotesCast = BigInt.fromI32(0);
@@ -77,8 +77,11 @@ export function initializeProposal(
   let dao = getOrCreateDAO(event.address.toHex());
   incrementProposalCount(dao);
 
+  proposal.dao = dao.id;
+  proposal.save();
+
   // Return the initialized Proposal entity
-  return proposal;
+  return proposal as ProposalCreated;
 }
 
 // Function to initialize a Proposal entity and handle VoteCast events
@@ -108,8 +111,13 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
     proposal.votesAbstain = proposal.votesAbstain.plus(votes);
   }
 
+  incrementProposalCount(getOrCreateDAO(event.address.toHex()));
   // Save the updated Proposal entity
   proposal.save();
+
+  // Update DAO totalVotesCast
+  let dao = getOrCreateDAO(event.address.toHexString());
+  incrementVoteCount(dao);
 
   // Create and save the VoteCast entity
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toHex();
@@ -122,10 +130,7 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   voteCast.blockNumber = event.block.number;
   voteCast.blockTimestamp = event.block.timestamp;
   voteCast.transactionHash = event.transaction.hash;
-
-  // Update DAO totalVotesCast
-  let dao = getOrCreateDAO(event.address.toHexString());
-  incrementVoteCount(dao);
+  voteCast.activeMembers = dao.id;
 
   // Save the VoteCast entity
   voteCast.save();
@@ -137,16 +142,28 @@ export function createProposalExecuted(event: ProposalExecutedEvent): void {
   let proposalId = event.params.id.toString();
 
   // Load the ProposalExecuted entity
-  let proposalExecuted = ProposalExecuted.load(proposalId);
+  let proposal = ProposalCreated.load(proposalId);
 
-  // If the ProposalExecuted entity doesn't exist, create a new one
-  if (!proposalExecuted) {
-    proposalExecuted = new ProposalExecuted(proposalId);
+  if (!proposal) {
+    // If the proposal does not exist, return
+    return;
   }
+
+  // Load the DAO entity
+  let dao = DAO.load(event.address.toHexString());
+
+  if (!dao) {
+    // If the DAO does not exist, return
+    return;
+  }
+
+  // Load the ProposalExecuted entity
+  let proposalExecuted = new ProposalExecuted(proposalId);
 
   // Set properties of the ProposalExecuted entity using event parameters
   proposalExecuted.executionId = event.params.id;
-  // proposalExecuted.dao = proposalExecuted.dao;
+  proposalExecuted.dao = dao.id;
+  proposalExecuted.proposal = proposal.id;
   proposalExecuted.blockNumber = event.block.number;
   proposalExecuted.blockTimestamp = event.block.timestamp;
   proposalExecuted.transactionHash = event.transaction.hash;
@@ -155,64 +172,61 @@ export function createProposalExecuted(event: ProposalExecutedEvent): void {
   proposalExecuted.save();
 }
 
-/// Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted
+// Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted
 export function createProposalQueued(event: ProposalQueuedEvent): void {
   // Convert the proposal ID from the event to a string
   let proposalId = event.params.id.toString();
 
-  // Load the ProposalQueued entity
-  let proposalQueued = ProposalQueued.load(proposalId);
-
-  // If the ProposalQueued entity doesn't exist, create a new one
-  if (!proposalQueued) {
-    proposalQueued = new ProposalQueued(proposalId);
-  }
-
-  // Load the DAO entity
-  let dao = getOrCreateDAO(event.address.toHexString());
-
   // Load the ProposalCreated entity
-  let proposalCreated = ProposalCreated.load(proposalId);
+  let proposal = ProposalCreated.load(proposalId);
 
   // If the ProposalCreated entity doesn't exist, return or handle as needed
-  if (!proposalCreated) {
+  if (!proposal) {
     return;
   }
 
+  // Load the DAO entity
+
+  let dao = getOrCreateDAO(event.address.toHexString());
+
+  let proposalQueued = new ProposalQueued(proposalId);
+
   // Set properties of the ProposalQueued entity using event parameters
   proposalQueued.queueId = event.params.id;
-  // proposalQueued.dao = proposalQueued.dao;
-  proposalQueued.proposal = proposalCreated.id;
+  proposalQueued.dao = dao.id;
+  proposalQueued.proposal = proposal.id;
   proposalQueued.eta = event.params.eta;
   proposalQueued.blockNumber = event.block.number;
   proposalQueued.blockTimestamp = event.block.timestamp;
   proposalQueued.transactionHash = event.transaction.hash;
 
   // Save the ProposalQueued entity
-  proposalQueued.save(); // Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted.
+  proposalQueued.save();
 }
 
-// Function to create a ProposalCanceled entity when a ProposalCanceledEvent is emitted
 export function createProposalCanceled(
   event: ProposalCanceledEvent
 ): ProposalCanceled {
-  // Create a unique ID using the transaction hash and log index
-  let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
+  let proposalId = event.params.id.toString();
+  let proposal = ProposalCreated.load(proposalId);
 
-  // Create and initialize the ProposalCanceled entity
-  let canceled = new ProposalCanceled(id);
+  if (!proposal) {
+    return new ProposalCanceled(event.transaction.hash.toHex());
+  }
+
+  let dao = getOrCreateDAO(event.address.toHexString());
+
+  let canceled = new ProposalCanceled(event.transaction.hash.toHex());
   canceled.cancelId = event.params.id;
   canceled.blockNumber = event.block.number;
-  // canceled.dao = canceled.dao;
   canceled.blockTimestamp = event.block.timestamp;
   canceled.transactionHash = event.transaction.hash;
+  canceled.dao = dao.id;
+  canceled.proposal = proposal.id;
 
-  // Update DAO totalProposals
-  let dao = getOrCreateDAO(event.params.id.toHex());
   decrementProposalCount(dao);
 
-  // Return the initialized ProposalCanceled entity
+  canceled.save();
+
   return canceled;
 }
-
-21;
