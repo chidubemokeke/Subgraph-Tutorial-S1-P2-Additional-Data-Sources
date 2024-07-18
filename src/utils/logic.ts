@@ -41,8 +41,10 @@ export function decrementProposalCount(dao: DAO): void {
   dao.totalProposals = dao.totalProposals.minus(increment); // Decrement totalProposals count by 1
   dao.save(); // Save the updated DAO entity to the graph datastore
 }
-
 // Convert the targets array (Address[]) from the event to an array of Bytes[]
+// The targets field in the event parameters is of type Address[]
+// You need to convert each Address[] to Bytes[].
+// Function to convert an array of Address objects to an array of Bytes objects]
 export function convertAddressesToBytesArray(addresses: Address[]): Bytes[] {
   // Initialize an empty array to hold the converted Bytes objects
   let bytesArray: Bytes[] = [];
