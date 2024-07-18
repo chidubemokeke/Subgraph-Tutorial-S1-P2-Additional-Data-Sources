@@ -4,11 +4,11 @@ type DAO @entity {
   totalVotesCast: BigInt!
   totalDelegatedVotesReceived: BigInt!
   totalDelegatedVotesGiven: BigInt!
-  executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Proposals Executed
-  canceled: [ProposalCanceled!] @derivedFrom(field: "dao")
-  queued: [ProposalQueued!]! @derivedFrom(field: "dao")
   proposals: [ProposalCreated!]! @derivedFrom(field: "dao")
   activeMembers: [VoteCast!]! @derivedFrom(field: "activeMembers") # Array of votes cast for the proposal
+  canceled: [ProposalCanceled!] @derivedFrom(field: "dao")
+  queued: [ProposalQueued!]! @derivedFrom(field: "dao")
+  executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Proposals Executed
 }
 
 type ProposalCreated @entity {
@@ -46,8 +46,8 @@ type ProposalCanceled @entity {
 type ProposalExecuted @entity {
   id: ID! # Unique identifier for the proposal execution event
   executionId: BigInt! # Unique identifier for the execution
-  dao: DAO!
   proposal: ProposalCreated! # Reference to the proposal that was executed
+  dao: DAO!
   blockNumber: BigInt! # Block number when the proposal was executed
   blockTimestamp: BigInt! # Timestamp when the proposal was executed
   transactionHash: Bytes! # Transaction hash for the execution event

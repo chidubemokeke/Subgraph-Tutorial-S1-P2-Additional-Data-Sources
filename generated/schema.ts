@@ -102,11 +102,19 @@ export class DAO extends Entity {
     this.set("totalDelegatedVotesGiven", Value.fromBigInt(value));
   }
 
-  get executed(): ProposalExecutedLoader {
-    return new ProposalExecutedLoader(
+  get proposals(): ProposalCreatedLoader {
+    return new ProposalCreatedLoader(
       "DAO",
       this.get("id")!.toString(),
-      "executed",
+      "proposals",
+    );
+  }
+
+  get activeMembers(): VoteCastLoader {
+    return new VoteCastLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "activeMembers",
     );
   }
 
@@ -126,19 +134,11 @@ export class DAO extends Entity {
     );
   }
 
-  get proposals(): ProposalCreatedLoader {
-    return new ProposalCreatedLoader(
+  get executed(): ProposalExecutedLoader {
+    return new ProposalExecutedLoader(
       "DAO",
       this.get("id")!.toString(),
-      "proposals",
-    );
-  }
-
-  get activeMembers(): VoteCastLoader {
-    return new VoteCastLoader(
-      "DAO",
-      this.get("id")!.toString(),
-      "activeMembers",
+      "executed",
     );
   }
 }
@@ -577,19 +577,6 @@ export class ProposalExecuted extends Entity {
     this.set("executionId", Value.fromBigInt(value));
   }
 
-  get dao(): string {
-    let value = this.get("dao");
-    if (!value || value.kind == ValueKind.NULL) {
-      throw new Error("Cannot return null for a required field.");
-    } else {
-      return value.toString();
-    }
-  }
-
-  set dao(value: string) {
-    this.set("dao", Value.fromString(value));
-  }
-
   get proposal(): string {
     let value = this.get("proposal");
     if (!value || value.kind == ValueKind.NULL) {
@@ -601,6 +588,19 @@ export class ProposalExecuted extends Entity {
 
   set proposal(value: string) {
     this.set("proposal", Value.fromString(value));
+  }
+
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -1314,7 +1314,7 @@ export class Transfer extends Entity {
   }
 }
 
-export class ProposalExecutedLoader extends Entity {
+export class ProposalCreatedLoader extends Entity {
   _entity: string;
   _field: string;
   _id: string;
@@ -1326,9 +1326,27 @@ export class ProposalExecutedLoader extends Entity {
     this._field = field;
   }
 
-  load(): ProposalExecuted[] {
+  load(): ProposalCreated[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
-    return changetype<ProposalExecuted[]>(value);
+    return changetype<ProposalCreated[]>(value);
+  }
+}
+
+export class VoteCastLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): VoteCast[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<VoteCast[]>(value);
   }
 }
 
@@ -1368,7 +1386,7 @@ export class ProposalQueuedLoader extends Entity {
   }
 }
 
-export class ProposalCreatedLoader extends Entity {
+export class ProposalExecutedLoader extends Entity {
   _entity: string;
   _field: string;
   _id: string;
@@ -1380,26 +1398,8 @@ export class ProposalCreatedLoader extends Entity {
     this._field = field;
   }
 
-  load(): ProposalCreated[] {
+  load(): ProposalExecuted[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
-    return changetype<ProposalCreated[]>(value);
-  }
-}
-
-export class VoteCastLoader extends Entity {
-  _entity: string;
-  _field: string;
-  _id: string;
-
-  constructor(entity: string, id: string, field: string) {
-    super();
-    this._entity = entity;
-    this._id = id;
-    this._field = field;
-  }
-
-  load(): VoteCast[] {
-    let value = store.loadRelated(this._entity, this._id, this._field);
-    return changetype<VoteCast[]>(value);
+    return changetype<ProposalExecuted[]>(value);
   }
 }

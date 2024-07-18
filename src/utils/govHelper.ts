@@ -146,9 +146,7 @@ export function createProposalExecuted(event: ProposalExecutedEvent): void {
 
   // Set properties of the ProposalExecuted entity using event parameters
   proposalExecuted.executionId = event.params.id;
-  proposalExecuted.dao = Bytes.fromHexString(
-    event.address.toHexString()
-  ).toHexString(); // Convert DAO ID to Bytes
+  // proposalExecuted.dao = proposalExecuted.dao;
   proposalExecuted.blockNumber = event.block.number;
   proposalExecuted.blockTimestamp = event.block.timestamp;
   proposalExecuted.transactionHash = event.transaction.hash;
@@ -183,10 +181,8 @@ export function createProposalQueued(event: ProposalQueuedEvent): void {
 
   // Set properties of the ProposalQueued entity using event parameters
   proposalQueued.queueId = event.params.id;
-  proposalQueued.dao = Bytes.fromHexString(
-    dao.id.replace("0x", "")
-  ).toHexString(); // Convert DAO ID to Bytes
-  proposalQueued.proposal = proposalCreated.id; // Assign ProposalCreated entity ID as string
+  // proposalQueued.dao = proposalQueued.dao;
+  proposalQueued.proposal = proposalCreated.id;
   proposalQueued.eta = event.params.eta;
   proposalQueued.blockNumber = event.block.number;
   proposalQueued.blockTimestamp = event.block.timestamp;
@@ -207,6 +203,7 @@ export function createProposalCanceled(
   let canceled = new ProposalCanceled(id);
   canceled.cancelId = event.params.id;
   canceled.blockNumber = event.block.number;
+  // canceled.dao = canceled.dao;
   canceled.blockTimestamp = event.block.timestamp;
   canceled.transactionHash = event.transaction.hash;
 
