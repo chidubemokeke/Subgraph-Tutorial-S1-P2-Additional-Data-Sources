@@ -11,6 +11,138 @@ import {
   BigDecimal,
 } from "@graphprotocol/graph-ts";
 
+export class DAO extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save DAO entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type DAO must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("DAO", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): DAO | null {
+    return changetype<DAO | null>(store.get_in_block("DAO", id));
+  }
+
+  static load(id: string): DAO | null {
+    return changetype<DAO | null>(store.get("DAO", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get totalProposals(): BigInt {
+    let value = this.get("totalProposals");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalProposals(value: BigInt) {
+    this.set("totalProposals", Value.fromBigInt(value));
+  }
+
+  get totalVotesCast(): BigInt {
+    let value = this.get("totalVotesCast");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalVotesCast(value: BigInt) {
+    this.set("totalVotesCast", Value.fromBigInt(value));
+  }
+
+  get totalDelegatedVotesReceived(): BigInt {
+    let value = this.get("totalDelegatedVotesReceived");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalDelegatedVotesReceived(value: BigInt) {
+    this.set("totalDelegatedVotesReceived", Value.fromBigInt(value));
+  }
+
+  get totalDelegatedVotesGiven(): BigInt {
+    let value = this.get("totalDelegatedVotesGiven");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalDelegatedVotesGiven(value: BigInt) {
+    this.set("totalDelegatedVotesGiven", Value.fromBigInt(value));
+  }
+
+  get executed(): ProposalExecutedLoader {
+    return new ProposalExecutedLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "executed",
+    );
+  }
+
+  get canceled(): ProposalCanceledLoader {
+    return new ProposalCanceledLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "canceled",
+    );
+  }
+
+  get queued(): ProposalQueuedLoader {
+    return new ProposalQueuedLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "queued",
+    );
+  }
+
+  get proposals(): ProposalCreatedLoader {
+    return new ProposalCreatedLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "proposals",
+    );
+  }
+
+  get activeMembers(): VoteCastLoader {
+    return new VoteCastLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "activeMembers",
+    );
+  }
+}
+
 export class ProposalCreated extends Entity {
   constructor(id: string) {
     super();
@@ -65,22 +197,6 @@ export class ProposalCreated extends Entity {
     this.set("creationId", Value.fromBigInt(value));
   }
 
-  get executed(): ProposalExecutedLoader {
-    return new ProposalExecutedLoader(
-      "ProposalCreated",
-      this.get("id")!.toString(),
-      "executed",
-    );
-  }
-
-  get canceled(): ProposalCanceledLoader {
-    return new ProposalCanceledLoader(
-      "ProposalCreated",
-      this.get("id")!.toString(),
-      "canceled",
-    );
-  }
-
   get proposer(): Bytes {
     let value = this.get("proposer");
     if (!value || value.kind == ValueKind.NULL) {
@@ -92,6 +208,19 @@ export class ProposalCreated extends Entity {
 
   set proposer(value: Bytes) {
     this.set("proposer", Value.fromBytes(value));
+  }
+
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
   }
 
   get targets(): Array<Bytes> {
@@ -237,6 +366,30 @@ export class ProposalCreated extends Entity {
     this.set("uniqueVoters", Value.fromBytesArray(value));
   }
 
+  get executed(): ProposalExecutedLoader {
+    return new ProposalExecutedLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "executed",
+    );
+  }
+
+  get canceled(): ProposalCanceledLoader {
+    return new ProposalCanceledLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "canceled",
+    );
+  }
+
+  get queued(): ProposalQueuedLoader {
+    return new ProposalQueuedLoader(
+      "ProposalCreated",
+      this.get("id")!.toString(),
+      "queued",
+    );
+  }
+
   get votes(): VoteCastLoader {
     return new VoteCastLoader(
       "ProposalCreated",
@@ -313,6 +466,19 @@ export class ProposalCanceled extends Entity {
 
   set proposal(value: string) {
     this.set("proposal", Value.fromString(value));
+  }
+
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
   }
 
   get blockNumber(): BigInt {
@@ -409,6 +575,19 @@ export class ProposalExecuted extends Entity {
 
   set executionId(value: BigInt) {
     this.set("executionId", Value.fromBigInt(value));
+  }
+
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
   }
 
   get proposal(): string {
@@ -516,6 +695,36 @@ export class ProposalQueued extends Entity {
 
   set queueId(value: BigInt) {
     this.set("queueId", Value.fromBigInt(value));
+  }
+
+  get dao(): string | null {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string | null) {
+    if (!value) {
+      this.unset("dao");
+    } else {
+      this.set("dao", Value.fromString(<string>value));
+    }
+  }
+
+  get proposal(): string {
+    let value = this.get("proposal");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set proposal(value: string) {
+    this.set("proposal", Value.fromString(value));
   }
 
   get eta(): BigInt {
@@ -647,6 +856,19 @@ export class VoteCast extends Entity {
 
   set voters(value: string) {
     this.set("voters", Value.fromString(value));
+  }
+
+  get activeMembers(): string {
+    let value = this.get("activeMembers");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set activeMembers(value: string) {
+    this.set("activeMembers", Value.fromString(value));
   }
 
   get support(): i32 {
@@ -1125,6 +1347,42 @@ export class ProposalCanceledLoader extends Entity {
   load(): ProposalCanceled[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<ProposalCanceled[]>(value);
+  }
+}
+
+export class ProposalQueuedLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ProposalQueued[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ProposalQueued[]>(value);
+  }
+}
+
+export class ProposalCreatedLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): ProposalCreated[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<ProposalCreated[]>(value);
   }
 }
 

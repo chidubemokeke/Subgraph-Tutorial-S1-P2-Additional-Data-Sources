@@ -14,7 +14,7 @@ import {
   createProposalCanceled,
   createProposalQueued,
   createProposalExecuted,
-} from "../utils/govHelper";
+} from "./../utils/govHelper";
 
 // Function to handle the ProposalCreated event
 export function handleProposalCreated(event: ProposalCreatedEvent): void {

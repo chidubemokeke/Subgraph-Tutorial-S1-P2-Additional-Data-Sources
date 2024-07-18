@@ -1,5 +1,41 @@
 // Importing necessary types and classes from the @graphprotocol/graph-ts library
 import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
+import { DAO } from "../../generated/schema";
+
+//Function to get or create a DAO entity and return it
+export function getOrCreateDAO(id: Bytes): DAO {
+  let dao = DAO.load(id.toHexString());
+  if (!dao) {
+    dao = new DAO(id.toHexString());
+    dao.totalProposals = BigInt.fromI32(0);
+    dao.totalVotesCast = BigInt.fromI32(0);
+    dao.totalDelegatedVotesReceived = BigInt.fromI32(0);
+    dao.totalDelegatedVotesGiven = BigInt.fromI32(0);
+    dao.save();
+  }
+  return dao as DAO;
+}
+
+// Convert integer 1 to BigInt
+let increment = BigInt.fromI32(1);
+
+// Function to increment proposal count
+export function incrementProposalCount(dao: DAO): void {
+  dao.totalProposals = dao.totalProposals.plus(increment);
+  dao.save();
+}
+
+// Function to increment vote count
+export function incrementVoteCount(dao: DAO): void {
+  dao.totalVotesCast = dao.totalVotesCast.plus(increment);
+  dao.save();
+}
+
+// Function to decrement proposal count
+export function decrementProposalCount(dao: DAO): void {
+  dao.totalProposals = dao.totalProposals.minus(increment);
+  dao.save();
+}
 
 // Convert the targets array (Address[]) from the event to an array of Bytes[]
 // The targets field in the event parameters is of type Address[]

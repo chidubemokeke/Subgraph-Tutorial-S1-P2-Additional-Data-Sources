@@ -3,6 +3,7 @@ import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 // Importing entity classes from the generated schema
 import {
+  DAO,
   ProposalCreated,
   VoteCast,
   ProposalCanceled,
@@ -18,6 +19,11 @@ import {
   ProposalQueued as ProposalQueuedEvent,
   ProposalExecuted as ProposalExecutedEvent,
 } from "../../generated/CGovernance/CGovernance";
+import {
+  incrementProposalCount,
+  incrementVoteCount,
+  decrementProposalCount,
+} from "../utils/logic";
 
 // Importing helper functions for converting data types
 import {
@@ -27,6 +33,18 @@ import {
   convertStringsToStringsArray,
 } from "./logic";
 
+export function getOrCreateDAO(id: string): DAO {
+  let dao = DAO.load(id);
+  if (dao == null) {
+    dao = new DAO(id);
+    dao.totalProposals = BigInt.fromI32(0);
+    dao.totalVotesCast = BigInt.fromI32(0);
+    dao.totalDelegatedVotesReceived = BigInt.fromI32(0);
+    dao.totalDelegatedVotesGiven = BigInt.fromI32(0);
+    dao.save();
+  }
+  return dao as DAO;
+}
 // Function to initialize a Proposal entity when a ProposalCreatedEvent is emitted
 export function initializeProposal(
   event: ProposalCreatedEvent
@@ -54,6 +72,10 @@ export function initializeProposal(
   proposal.votesAgainst = BigInt.fromI32(0);
   proposal.votesAbstain = BigInt.fromI32(0);
   proposal.uniqueVoters = new Array<Bytes>();
+
+  // Get or create the DAO entity and update its totalProposals
+  let dao = getOrCreateDAO(event.address.toHex());
+  incrementProposalCount(dao);
 
   // Return the initialized Proposal entity
   return proposal;
@@ -101,8 +123,77 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   voteCast.blockTimestamp = event.block.timestamp;
   voteCast.transactionHash = event.transaction.hash;
 
+  // Update DAO totalVotesCast
+  let dao = getOrCreateDAO(event.address.toHexString());
+  incrementVoteCount(dao);
+
   // Save the VoteCast entity
   voteCast.save();
+}
+
+// Function to create and save a ProposalExecuted entity when a ProposalExecutedEvent is emitted
+export function createProposalExecuted(event: ProposalExecutedEvent): void {
+  // Convert the proposal ID from the event to a string
+  let proposalId = event.params.id.toString();
+
+  // Load the ProposalExecuted entity
+  let proposalExecuted = ProposalExecuted.load(proposalId);
+
+  // If the ProposalExecuted entity doesn't exist, create a new one
+  if (!proposalExecuted) {
+    proposalExecuted = new ProposalExecuted(proposalId);
+  }
+
+  // Set properties of the ProposalExecuted entity using event parameters
+  proposalExecuted.executionId = event.params.id;
+  proposalExecuted.dao = Bytes.fromHexString(
+    event.address.toHexString()
+  ).toHexString(); // Convert DAO ID to Bytes
+  proposalExecuted.blockNumber = event.block.number;
+  proposalExecuted.blockTimestamp = event.block.timestamp;
+  proposalExecuted.transactionHash = event.transaction.hash;
+
+  // Save the ProposalExecuted entity
+  proposalExecuted.save();
+}
+
+/// Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted
+export function createProposalQueued(event: ProposalQueuedEvent): void {
+  // Convert the proposal ID from the event to a string
+  let proposalId = event.params.id.toString();
+
+  // Load the ProposalQueued entity
+  let proposalQueued = ProposalQueued.load(proposalId);
+
+  // If the ProposalQueued entity doesn't exist, create a new one
+  if (!proposalQueued) {
+    proposalQueued = new ProposalQueued(proposalId);
+  }
+
+  // Load the DAO entity
+  let dao = getOrCreateDAO(event.address.toHexString());
+
+  // Load the ProposalCreated entity
+  let proposalCreated = ProposalCreated.load(proposalId);
+
+  // If the ProposalCreated entity doesn't exist, return or handle as needed
+  if (!proposalCreated) {
+    return;
+  }
+
+  // Set properties of the ProposalQueued entity using event parameters
+  proposalQueued.queueId = event.params.id;
+  proposalQueued.dao = Bytes.fromHexString(
+    dao.id.replace("0x", "")
+  ).toHexString(); // Convert DAO ID to Bytes
+  proposalQueued.proposal = proposalCreated.id; // Assign ProposalCreated entity ID as string
+  proposalQueued.eta = event.params.eta;
+  proposalQueued.blockNumber = event.block.number;
+  proposalQueued.blockTimestamp = event.block.timestamp;
+  proposalQueued.transactionHash = event.transaction.hash;
+
+  // Save the ProposalQueued entity
+  proposalQueued.save(); // Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted.
 }
 
 // Function to create a ProposalCanceled entity when a ProposalCanceledEvent is emitted
@@ -119,49 +210,12 @@ export function createProposalCanceled(
   canceled.blockTimestamp = event.block.timestamp;
   canceled.transactionHash = event.transaction.hash;
 
+  // Update DAO totalProposals
+  let dao = getOrCreateDAO(event.params.id.toHex());
+  decrementProposalCount(dao);
+
   // Return the initialized ProposalCanceled entity
   return canceled;
 }
 
-// Function to create and save a ProposalQueued entity when a ProposalQueuedEvent is emitted
-export function createProposalQueued(event: ProposalQueuedEvent): void {
-  // Convert the proposal ID from the event to a string and load the ProposalQueued entity
-  let proposalId = event.params.id.toString();
-  let proposal = ProposalQueued.load(proposalId);
-
-  // If the ProposalQueued entity doesn't exist, create a new one
-  if (!proposal) {
-    proposal = new ProposalQueued(proposalId);
-  }
-
-  // Set properties of the ProposalQueued entity using event parameters
-  proposal.queueId = event.params.id;
-  proposal.eta = event.params.eta;
-  proposal.blockNumber = event.block.number;
-  proposal.blockTimestamp = event.block.timestamp;
-  proposal.transactionHash = event.transaction.hash;
-
-  // Save the ProposalQueued entity
-  proposal.save();
-}
-
-// Function to create and save a ProposalExecuted entity when a ProposalExecutedEvent is emitted
-export function createProposalExecuted(event: ProposalExecutedEvent): void {
-  // Convert the proposal ID from the event to a string and load the ProposalExecuted entity
-  let proposalId = event.params.id.toString();
-  let proposal = ProposalExecuted.load(proposalId);
-
-  // If the ProposalExecuted entity doesn't exist, create a new one
-  if (!proposal) {
-    proposal = new ProposalExecuted(proposalId);
-  }
-
-  // Set properties of the ProposalExecuted entity using event parameters
-  proposal.executionId = event.params.id;
-  proposal.blockNumber = event.block.number;
-  proposal.blockTimestamp = event.block.timestamp;
-  proposal.transactionHash = event.transaction.hash;
-
-  // Save the ProposalExecuted entity
-  proposal.save();
-}
+21;

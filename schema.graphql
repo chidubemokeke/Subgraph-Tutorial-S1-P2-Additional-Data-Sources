@@ -1,9 +1,21 @@
+type DAO @entity {
+  id: ID!
+  totalProposals: BigInt!
+  totalVotesCast: BigInt!
+  totalDelegatedVotesReceived: BigInt!
+  totalDelegatedVotesGiven: BigInt!
+  executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Proposals Executed
+  canceled: [ProposalCanceled!] @derivedFrom(field: "dao")
+  queued: [ProposalQueued!]! @derivedFrom(field: "dao")
+  proposals: [ProposalCreated!]! @derivedFrom(field: "dao")
+  activeMembers: [VoteCast!]! @derivedFrom(field: "activeMembers") # Array of votes cast for the proposal
+}
+
 type ProposalCreated @entity {
   id: ID! # Unique identifier for the proposal
   creationId: BigInt! # Unique identifier for the proposal creation event
-  executed: [ProposalExecuted!]! @derivedFrom(field: "proposal") # Proposals Executed
-  canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal")
   proposer: Bytes! # DAO account that initiated the proposal
+  dao: DAO!
   targets: [Bytes!]! # Array of target addresses that the proposal interacts with
   values: [BigInt!]! # Array of values (amounts) sent to the targets
   signatures: [String!]! # Array of function signatures called on the targets
@@ -15,6 +27,9 @@ type ProposalCreated @entity {
   votesAgainst: BigInt! # Number of votes against the proposal
   votesAbstain: BigInt! # Number of votes abstaining from the proposal
   uniqueVoters: [Bytes!]! # Array of unique voter addresses who voted on the proposal
+  executed: [ProposalExecuted!]! @derivedFrom(field: "proposal") # Proposals Executed
+  canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal")
+  queued: [ProposalQueued!]! @derivedFrom(field: "proposal")
   votes: [VoteCast!]! @derivedFrom(field: "voters") # Array of votes cast for the proposal
 }
 
@@ -22,6 +37,7 @@ type ProposalCanceled @entity {
   id: ID! # Unique identifier for the proposal cancellation event
   cancelId: BigInt! # Unique identifier for the cancellation
   proposal: ProposalCreated! # Reference to the proposal that was executed
+  dao: DAO!
   blockNumber: BigInt! # Block number when the proposal was canceled
   blockTimestamp: BigInt! # Timestamp when the proposal was canceled
   transactionHash: Bytes! # Transaction hash for the cancellation event
@@ -30,6 +46,7 @@ type ProposalCanceled @entity {
 type ProposalExecuted @entity {
   id: ID! # Unique identifier for the proposal execution event
   executionId: BigInt! # Unique identifier for the execution
+  dao: DAO!
   proposal: ProposalCreated! # Reference to the proposal that was executed
   blockNumber: BigInt! # Block number when the proposal was executed
   blockTimestamp: BigInt! # Timestamp when the proposal was executed
@@ -39,6 +56,8 @@ type ProposalExecuted @entity {
 type ProposalQueued @entity {
   id: ID! # Unique identifier for the proposal queue event
   queueId: BigInt! # Unique identifier for the queue
+  dao: DAO
+  proposal: ProposalCreated!
   eta: BigInt! # Estimated time of arrival for the queue
   blockNumber: BigInt! # Block number when the proposal was queued
   blockTimestamp: BigInt! # Timestamp when the proposal was queued
@@ -50,6 +69,7 @@ type VoteCast @entity {
   voter: Bytes! # Address of the voter
   proposalId: BigInt! # Identifier of the proposal being voted on
   voters: ProposalCreated! # Proposal this vote is cast for
+  activeMembers: DAO!
   support: Int! # Support type (0, 1, 2)
   votes: BigInt! # Number of votes cast
   reason: String # Reason for the vote (optional)
