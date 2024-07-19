@@ -119,6 +119,7 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
     proposal.votesAbstain = proposal.votesAbstain.plus(votes);
   }
 
+  // Increment proposal count and save updated Proposal entity
   incrementProposalCount(getOrCreateDAO(event.address.toHex()));
   proposal.save(); // Persist updated Proposal entity
 
@@ -131,6 +132,7 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   let voteCast = new VoteCast(id);
   voteCast.voter = voterAddress;
   voteCast.proposalId = event.params.proposalId;
+  voteCast.voters = event.params.proposalId.toHex();
   voteCast.support = event.params.support;
   voteCast.votes = votes;
   voteCast.reason = event.params.reason;
