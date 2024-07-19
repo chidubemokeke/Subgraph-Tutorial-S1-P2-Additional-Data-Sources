@@ -9,6 +9,7 @@ type DAO @entity {
   canceled: [ProposalCanceled!] @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "dao") # Array of proposals queued by the DAO, derived from the "dao" field in ProposalQueued
   executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Array of proposals executed by the DAO, derived from the "dao" field in ProposalExecuted
+  delegates: [Delegate!]! @derivedFrom(field: "dao") # Array of delegates associated with this DAO
 }
 
 type ProposalCreated @entity {

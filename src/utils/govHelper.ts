@@ -65,9 +65,14 @@ export function initializeProposal(
     proposal = new ProposalCreated(proposalId);
   }
 
+  // Get or create the DAO entity and update its totalProposals
+  let dao = getOrCreateDAO(event.address.toHex());
+  incrementProposalCount(dao);
+
   // Set properties of Proposal entity using event parameters
   proposal.creationId = event.params.id;
   proposal.proposer = event.params.proposer;
+  proposal.dao = dao.id;
   proposal.targets = convertAddressesToBytesArray(event.params.targets);
   proposal.values = convertValuesToBigIntArray(event.params.values);
   proposal.signatures = convertStringsToStringsArray(event.params.signatures);
@@ -80,11 +85,6 @@ export function initializeProposal(
   proposal.votesAbstain = BigInt.fromI32(0);
   proposal.uniqueVoters = new Array<Bytes>();
 
-  // Get or create the DAO entity and update its totalProposals
-  let dao = getOrCreateDAO(event.address.toHex());
-  incrementProposalCount(dao);
-
-  proposal.dao = dao.id;
   proposal.save(); // Persist Proposal entity
 
   // Return the initialized Proposal entity
