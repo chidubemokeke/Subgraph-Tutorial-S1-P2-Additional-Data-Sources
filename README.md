@@ -1,7 +1,5 @@
 # Subgraph Tutorial - Part 2: Leveraging One Subgraph to Track Multiple Smart Contracts
 
-Welcome back to our subgraph development masterclass! In [Part 1](https://github.com/chidubemokeke/Subgraph-Masterclass-S1-P1-ERC20/tree/main) and focus on managing complex data structures and entities within a single subgraph. We will use Compound Governance contracts as our use cases.
-
 ## Overview
 
 [In Part 1](https://github.com/chidubemokeke/Subgraph-Masterclass-S1-P1-ERC20/tree/main), we covered the basics of subgraph development, including setting up a project and defining a schema. In this session, we will build on that foundation and delve into more advanced topics. We'll handle multiple smart contracts, incorporate custom logic, and use helper functions to manage data efficiently.
