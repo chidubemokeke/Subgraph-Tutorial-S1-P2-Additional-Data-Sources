@@ -90,10 +90,24 @@ NOTE: This directory structure organizes your subgraph project into logical sect
 In this section, we'll extend our GraphQL schema to include entities for managing DAO-related data. Open schema.graphql and add the following entities:
 
 ```gql
+type DAO @entity {
+  id: ID! # Unique identifier for each DAO entity
+  totalProposals: BigInt! # Total number of proposals associated with the DAO
+  totalVotesCast: BigInt! # Total number of votes cast across all proposals
+  totalDelegatedVotesReceived: BigInt! # Total delegated votes received by the DAO
+  totalDelegatedVotesGiven: BigInt! # Total delegated votes given out by the DAO
+  proposals: [ProposalCreated!]! @derivedFrom(field: "dao") # Array of proposals created by the DAO, derived from the "dao" field in ProposalCreated
+  activeMembers: [VoteCast!]! @derivedFrom(field: "activeMembers") # Array of votes cast by active members of the DAO
+  canceled: [ProposalCanceled!] @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
+  queued: [ProposalQueued!]! @derivedFrom(field: "dao") # Array of proposals queued by the DAO, derived from the "dao" field in ProposalQueued
+  executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Array of proposals executed by the DAO, derived from the "dao" field in ProposalExecuted
+}
+
 type ProposalCreated @entity {
-  id: ID! # Unique identifier for the proposal
+  id: ID! # Unique identifier for each ProposalCreated entity
   creationId: BigInt! # Unique identifier for the proposal creation event
-  proposer: Bytes! # DAO account that initiated the proposal
+  proposer: Bytes! # Address of the DAO account that initiated the proposal
+  dao: DAO! # Reference to the DAO entity associated with this proposal
   targets: [Bytes!]! # Array of target addresses that the proposal interacts with
   values: [BigInt!]! # Array of values (amounts) sent to the targets
   signatures: [String!]! # Array of function signatures called on the targets
@@ -105,58 +119,71 @@ type ProposalCreated @entity {
   votesAgainst: BigInt! # Number of votes against the proposal
   votesAbstain: BigInt! # Number of votes abstaining from the proposal
   uniqueVoters: [Bytes!]! # Array of unique voter addresses who voted on the proposal
+  executed: [ProposalExecuted!]! @derivedFrom(field: "proposal") # Array of ProposalExecuted entities derived from the "proposal" field in ProposalExecuted
+  canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal") # Array of ProposalCanceled entities derived from the "proposal" field in ProposalCanceled
+  queued: [ProposalQueued!]! @derivedFrom(field: "proposal") # Array of ProposalQueued entities derived from the "proposal" field in ProposalQueued
+  votes: [VoteCast!]! @derivedFrom(field: "voters") # Array of VoteCast entities derived from the "voters" field in VoteCast
 }
 
 type ProposalCanceled @entity {
-  id: ID! # Unique identifier for the proposal cancellation event
-  cancelId: BigInt! # Unique identifier for the cancellation
+  id: ID! # Unique identifier for each ProposalCanceled entity
+  cancelId: BigInt! # Unique identifier for the proposal cancellation event
+  proposal: ProposalCreated! # Reference to the ProposalCreated entity that was canceled
+  dao: DAO! # Reference to the DAO entity associated with this cancellation
   blockNumber: BigInt! # Block number when the proposal was canceled
   blockTimestamp: BigInt! # Timestamp when the proposal was canceled
   transactionHash: Bytes! # Transaction hash for the cancellation event
 }
 
 type ProposalExecuted @entity {
-  id: ID! # Unique identifier for the proposal execution event
-  executionId: BigInt! # Unique identifier for the execution
+  id: ID! # Unique identifier for each ProposalExecuted entity
+  executionId: BigInt! # Unique identifier for the proposal execution event
+  proposal: ProposalCreated! # Reference to the ProposalCreated entity that was executed
+  dao: DAO! # Reference to the DAO entity associated with this execution
   blockNumber: BigInt! # Block number when the proposal was executed
   blockTimestamp: BigInt! # Timestamp when the proposal was executed
   transactionHash: Bytes! # Transaction hash for the execution event
 }
 
 type ProposalQueued @entity {
-  id: ID! # Unique identifier for the proposal queue event
-  queueId: BigInt! # Unique identifier for the queue
-  eta: BigInt! # Estimated time of arrival for the queue
+  id: ID! # Unique identifier for each ProposalQueued entity
+  queueId: BigInt! # Unique identifier for the proposal queue event
+  dao: DAO # Reference to the DAO entity associated with this queue event
+  proposal: ProposalCreated! # Reference to the ProposalCreated entity that was queued
+  eta: BigInt! # Estimated time of arrival for the proposal queue
   blockNumber: BigInt! # Block number when the proposal was queued
   blockTimestamp: BigInt! # Timestamp when the proposal was queued
   transactionHash: Bytes! # Transaction hash for the queue event
 }
 
 type VoteCast @entity {
-  id: ID! # Unique identifier for the vote cast event
-  voter: Bytes! # Address of the voter
-  support: Int! # Support type (0, 1, 2)
+  id: ID! # Unique identifier for each VoteCast entity
+  voter: Bytes! # Address of the voter who cast the vote
+  proposalId: BigInt! # Identifier of the proposal being voted on
+  voters: ProposalCreated! # Reference to the ProposalCreated entity associated with this vote
+  activeMembers: DAO! # Reference to the DAO entity of active members casting the vote
+  support: Int! # Support type (0 - against, 1 - for, 2 - abstain)
   votes: BigInt! # Number of votes cast
-  reason: String # Reason for the vote (optional)
+  reason: String # Optional reason for the vote
   blockNumber: BigInt! # Block number when the vote was cast
   blockTimestamp: BigInt! # Timestamp when the vote was cast
-  transactionHash: Bytes! # Transaction hash for the vote cast event
+  transactionHash: Bytes! # Transaction hash for the vote event
 }
 
 type DelegateChanged @entity {
-  id: ID! # Unique identifier for the delegate change event
-  delegator: Bytes! # Address of the delegator
-  fromDelegate: Bytes! # Address of the previous delegate
-  toDelegate: Bytes! # Address of the new delegate
+  id: ID! # Unique identifier for each DelegateChanged entity
+  delegator: Bytes! # Address of the delegator who changed delegate
+  fromDelegate: Bytes! # Previous address of the delegate
+  toDelegate: Bytes! # New address of the delegate
   blockNumber: BigInt! # Block number when the delegate change occurred
   blockTimestamp: BigInt! # Timestamp when the delegate change occurred
   transactionHash: Bytes! # Transaction hash for the delegate change event
 }
 
 type DelegateVotesChanged @entity {
-  id: ID! # Unique identifier for the delegate votes change event
-  delegate: Bytes! #
-  previousBalance: BigInt! #Previous balance of the delegate's votes
+  id: ID! # Unique identifier for each DelegateVotesChanged entity
+  delegate: Bytes! # Address of the delegate whose votes changed
+  previousBalance: BigInt! # Previous balance of the delegate's votes
   newBalance: BigInt! # New balance of the delegate's votes
   blockNumber: BigInt! # Block number when the votes change occurred
   blockTimestamp: BigInt! # Timestamp when the votes change occurred
@@ -164,9 +191,9 @@ type DelegateVotesChanged @entity {
 }
 
 type Transfer @entity {
-  id: ID! # Unique identifier for the transfer event
-  from: Bytes! # Address from which the tokens are transferred
-  to: Bytes! # Address to which the tokens are transferred
+  id: ID! # Unique identifier for each Transfer entity
+  from: Bytes! # Address from which the tokens were transferred
+  to: Bytes! # Address to which the tokens were transferred
   amount: BigInt! # Amount of tokens transferred
   blockNumber: BigInt! # Block number when the transfer occurred
   blockTimestamp: BigInt! # Timestamp when the transfer occurred
