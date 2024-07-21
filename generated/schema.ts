@@ -110,12 +110,8 @@ export class DAO extends Entity {
     );
   }
 
-  get activeMembers(): VoteCastLoader {
-    return new VoteCastLoader(
-      "DAO",
-      this.get("id")!.toString(),
-      "activeMembers",
-    );
+  get voters(): VoteCastLoader {
+    return new VoteCastLoader("DAO", this.get("id")!.toString(), "voters");
   }
 
   get canceled(): ProposalCanceledLoader {
@@ -845,8 +841,8 @@ export class VoteCast extends Entity {
     this.set("proposalId", Value.fromBigInt(value));
   }
 
-  get voters(): string {
-    let value = this.get("voters");
+  get proposal(): string {
+    let value = this.get("proposal");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -854,12 +850,12 @@ export class VoteCast extends Entity {
     }
   }
 
-  set voters(value: string) {
-    this.set("voters", Value.fromString(value));
+  set proposal(value: string) {
+    this.set("proposal", Value.fromString(value));
   }
 
-  get activeMembers(): string {
-    let value = this.get("activeMembers");
+  get dao(): string {
+    let value = this.get("dao");
     if (!value || value.kind == ValueKind.NULL) {
       throw new Error("Cannot return null for a required field.");
     } else {
@@ -867,8 +863,8 @@ export class VoteCast extends Entity {
     }
   }
 
-  set activeMembers(value: string) {
-    this.set("activeMembers", Value.fromString(value));
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
   }
 
   get support(): i32 {

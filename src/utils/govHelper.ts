@@ -132,14 +132,15 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   let voteCast = new VoteCast(id);
   voteCast.voter = voterAddress;
   voteCast.proposalId = event.params.proposalId;
-  voteCast.voters = event.params.proposalId.toHex();
+  voteCast.proposal = proposal.id;
+  voteCast.dao = dao.id;
   voteCast.support = event.params.support;
   voteCast.votes = votes;
   voteCast.reason = event.params.reason;
   voteCast.blockNumber = event.block.number;
   voteCast.blockTimestamp = event.block.timestamp;
   voteCast.transactionHash = event.transaction.hash;
-  voteCast.activeMembers = dao.id;
+
   voteCast.save();
 }
 

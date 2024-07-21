@@ -5,7 +5,7 @@ type DAO @entity {
   totalDelegatedVotesReceived: BigInt! # Total delegated votes received by the DAO
   totalDelegatedVotesGiven: BigInt! # Total delegated votes given out by the DAO
   proposals: [ProposalCreated!]! @derivedFrom(field: "dao") # Array of proposals created by the DAO, derived from the "dao" field in ProposalCreated
-  activeMembers: [VoteCast!]! @derivedFrom(field: "activeMembers") # Array of votes cast by active members of the DAO
+  voters: [VoteCast!]! @derivedFrom(field: "dao") # Array of votes cast by members of the DAO, derived from the "dao" field in VoteCast
   canceled: [ProposalCanceled!] @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "dao") # Array of proposals queued by the DAO, derived from the "dao" field in ProposalQueued
   executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Array of proposals executed by the DAO, derived from the "dao" field in ProposalExecuted
@@ -30,7 +30,7 @@ type ProposalCreated @entity {
   executed: [ProposalExecuted!]! @derivedFrom(field: "proposal") # Array of ProposalExecuted entities derived from the "proposal" field in ProposalExecuted
   canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal") # Array of ProposalCanceled entities derived from the "proposal" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "proposal") # Array of ProposalQueued entities derived from the "proposal" field in ProposalQueued
-  votes: [VoteCast!]! @derivedFrom(field: "voters") # Array of VoteCast entities derived from the "voters" field in VoteCast
+  votes: [VoteCast!]! @derivedFrom(field: "proposal") # Array of VoteCast entities derived from the "proposal" field in VoteCast
 }
 
 type ProposalCanceled @entity {
@@ -68,8 +68,8 @@ type VoteCast @entity {
   id: ID! # Unique identifier for each VoteCast entity
   voter: Bytes! # Address of the voter who cast the vote
   proposalId: BigInt! # Identifier of the proposal being voted on
-  voters: ProposalCreated! # Reference to the ProposalCreated entity associated with this vote
-  activeMembers: DAO! # Reference to the DAO entity of active members casting the vote
+  proposal: ProposalCreated! # Reference to the ProposalCreated entity associated with this vote
+  dao: DAO! # Reference to the DAO entity of active members casting the vote
   support: Int! # Support type (0 - against, 1 - for, 2 - abstain)
   votes: BigInt! # Number of votes cast
   reason: String # Optional reason for the vote
