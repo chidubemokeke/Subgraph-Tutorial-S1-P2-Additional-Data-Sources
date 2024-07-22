@@ -1,14 +1,33 @@
+# Represents a DAO (Decentralized Autonomous Organization)
 type DAO @entity {
   id: ID! # Unique identifier for each DAO entity
+  delegate: [DelegateTracker!]! @derivedFrom(field: "dao")
   totalProposals: BigInt! # Total number of proposals associated with the DAO
   totalVotesCast: BigInt! # Total number of votes cast across all proposals
   totalDelegatedVotesReceived: BigInt! # Total delegated votes received by the DAO
   totalDelegatedVotesGiven: BigInt! # Total delegated votes given out by the DAO
+  totalTransfers: BigInt!
   proposals: [ProposalCreated!]! @derivedFrom(field: "dao") # Array of proposals created by the DAO, derived from the "dao" field in ProposalCreated
   voters: [VoteCast!]! @derivedFrom(field: "dao") # Array of votes cast by members of the DAO, derived from the "dao" field in VoteCast
-  canceled: [ProposalCanceled!] @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
+  canceled: [ProposalCanceled!]! @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "dao") # Array of proposals queued by the DAO, derived from the "dao" field in ProposalQueued
   executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Array of proposals executed by the DAO, derived from the "dao" field in ProposalExecuted
+  # Aggregated data fields
+  totalAmountTransferred: BigInt!
+  totalDelegateChanges: BigInt! # Total number of DelegateChanges
+  averageVotesPerProposal: BigInt! # Average number of votes per proposal
+  uniqueVotersCount: BigInt! # Total number of unique voters in the DAO
+}
+
+# Represents tracking of delegate information within a DAO
+type DelegateTracker @entity {
+  id: ID! # Unique identifier for each Delegate entity
+  dao: DAO!
+  delegate: [DelegateChanged!]! @derivedFrom(field: "delegate")
+  votes: [VoteCast!]! @derivedFrom(field: "delegate")
+  changes: [DelegateChanged!]! @derivedFrom(field: "delegate") # Array of delegate changes related to the DAO
+  delegateVotesChanges: [DelegateVotesChanged!]! @derivedFrom(field: "votes") # Array of delegate votes changes related to the DAO
+  transfers: [DelegateTracker!]! @derivedFrom(field: "transfers") # Array of transfers related to the Delegate
 }
 
 type ProposalCreated @entity {
@@ -31,6 +50,9 @@ type ProposalCreated @entity {
   canceled: [ProposalCanceled!]! @derivedFrom(field: "proposal") # Array of ProposalCanceled entities derived from the "proposal" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "proposal") # Array of ProposalQueued entities derived from the "proposal" field in ProposalQueued
   votes: [VoteCast!]! @derivedFrom(field: "proposal") # Array of VoteCast entities derived from the "proposal" field in VoteCast
+  # Aggregated data fields
+  totalVotes: BigInt! # Total number of votes cast on the proposal
+  averageVotesPerVoter: BigInt! # Average number of votes per unique voter
 }
 
 type ProposalCanceled @entity {
@@ -67,6 +89,7 @@ type ProposalQueued @entity {
 type VoteCast @entity {
   id: ID! # Unique identifier for each VoteCast entity
   voter: Bytes! # Address of the voter who cast the vote
+  delegate: DelegateTracker!
   proposalId: BigInt! # Identifier of the proposal being voted on
   proposal: ProposalCreated! # Reference to the ProposalCreated entity associated with this vote
   dao: DAO! # Reference to the DAO entity of active members casting the vote
@@ -80,6 +103,8 @@ type VoteCast @entity {
 
 type DelegateChanged @entity {
   id: ID! # Unique identifier for each DelegateChanged entity
+  dao: DAO!
+  delegate: DelegateTracker!
   delegator: Bytes! # Address of the delegator who changed delegate
   fromDelegate: Bytes! # Previous address of the delegate
   toDelegate: Bytes! # New address of the delegate
@@ -90,6 +115,8 @@ type DelegateChanged @entity {
 
 type DelegateVotesChanged @entity {
   id: ID! # Unique identifier for each DelegateVotesChanged entity
+  dao: DAO!
+  votes: DelegateTracker!
   delegate: Bytes! # Address of the delegate whose votes changed
   previousBalance: BigInt! # Previous balance of the delegate's votes
   newBalance: BigInt! # New balance of the delegate's votes
@@ -100,6 +127,8 @@ type DelegateVotesChanged @entity {
 
 type Transfer @entity {
   id: ID! # Unique identifier for each Transfer entity
+  dao: DAO!
+  transfers: DelegateTracker!
   from: Bytes! # Address from which the tokens were transferred
   to: Bytes! # Address to which the tokens were transferred
   amount: BigInt! # Amount of tokens transferred

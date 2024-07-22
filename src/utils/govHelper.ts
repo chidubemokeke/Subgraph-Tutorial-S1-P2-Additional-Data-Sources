@@ -25,6 +25,7 @@ import {
   incrementProposalCount,
   incrementVoteCount,
   decrementProposalCount,
+  updateAverageVotesPerProposal,
 } from "../utils/logic";
 
 // Importing helper functions for converting data types
@@ -47,6 +48,8 @@ export function getOrCreateDAO(id: string): DAO {
     dao.totalVotesCast = BigInt.fromI32(0); // Initialize vote counts
     dao.totalDelegatedVotesReceived = BigInt.fromI32(0); // Initialize delegated vote counts
     dao.totalDelegatedVotesGiven = BigInt.fromI32(0); // Initialize delegated vote counts
+    dao.averageVotesPerProposal = BigInt.fromI32(0);
+    dao.uniqueVotersCount = BigInt.fromI32(0);
     dao.save(); // Persist DAO entity
   }
   return dao as DAO; // Return DAO entity
@@ -85,6 +88,9 @@ export function initializeProposal(
   proposal.votesAbstain = BigInt.fromI32(0);
   proposal.uniqueVoters = new Array<Bytes>();
 
+  proposal.totalVotes = BigInt.fromI32(0); // Initialize aggregation fields
+  proposal.averageVotesPerVoter = BigInt.fromI32(0); // Initialize aggregation fields
+
   proposal.save(); // Persist Proposal entity
 
   // Return the initialized Proposal entity
@@ -121,6 +127,8 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
 
   // Increment proposal count and save updated Proposal entity
   incrementProposalCount(getOrCreateDAO(event.address.toHex()));
+  updateAverageVotesPerProposal(proposal);
+
   proposal.save(); // Persist updated Proposal entity
 
   // Update DAO totalVotesCast

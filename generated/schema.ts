@@ -50,6 +50,14 @@ export class DAO extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get delegate(): DelegateTrackerLoader {
+    return new DelegateTrackerLoader(
+      "DAO",
+      this.get("id")!.toString(),
+      "delegate",
+    );
+  }
+
   get totalProposals(): BigInt {
     let value = this.get("totalProposals");
     if (!value || value.kind == ValueKind.NULL) {
@@ -102,6 +110,19 @@ export class DAO extends Entity {
     this.set("totalDelegatedVotesGiven", Value.fromBigInt(value));
   }
 
+  get totalTransfers(): BigInt {
+    let value = this.get("totalTransfers");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalTransfers(value: BigInt) {
+    this.set("totalTransfers", Value.fromBigInt(value));
+  }
+
   get proposals(): ProposalCreatedLoader {
     return new ProposalCreatedLoader(
       "DAO",
@@ -135,6 +156,153 @@ export class DAO extends Entity {
       "DAO",
       this.get("id")!.toString(),
       "executed",
+    );
+  }
+
+  get totalAmountTransferred(): BigInt {
+    let value = this.get("totalAmountTransferred");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalAmountTransferred(value: BigInt) {
+    this.set("totalAmountTransferred", Value.fromBigInt(value));
+  }
+
+  get totalDelegateChanges(): BigInt {
+    let value = this.get("totalDelegateChanges");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalDelegateChanges(value: BigInt) {
+    this.set("totalDelegateChanges", Value.fromBigInt(value));
+  }
+
+  get averageVotesPerProposal(): BigInt {
+    let value = this.get("averageVotesPerProposal");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set averageVotesPerProposal(value: BigInt) {
+    this.set("averageVotesPerProposal", Value.fromBigInt(value));
+  }
+
+  get uniqueVotersCount(): BigInt {
+    let value = this.get("uniqueVotersCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set uniqueVotersCount(value: BigInt) {
+    this.set("uniqueVotersCount", Value.fromBigInt(value));
+  }
+}
+
+export class DelegateTracker extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save DelegateTracker entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type DelegateTracker must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`,
+      );
+      store.set("DelegateTracker", id.toString(), this);
+    }
+  }
+
+  static loadInBlock(id: string): DelegateTracker | null {
+    return changetype<DelegateTracker | null>(
+      store.get_in_block("DelegateTracker", id),
+    );
+  }
+
+  static load(id: string): DelegateTracker | null {
+    return changetype<DelegateTracker | null>(store.get("DelegateTracker", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
+  }
+
+  get delegate(): DelegateChangedLoader {
+    return new DelegateChangedLoader(
+      "DelegateTracker",
+      this.get("id")!.toString(),
+      "delegate",
+    );
+  }
+
+  get votes(): VoteCastLoader {
+    return new VoteCastLoader(
+      "DelegateTracker",
+      this.get("id")!.toString(),
+      "votes",
+    );
+  }
+
+  get changes(): DelegateChangedLoader {
+    return new DelegateChangedLoader(
+      "DelegateTracker",
+      this.get("id")!.toString(),
+      "changes",
+    );
+  }
+
+  get delegateVotesChanges(): DelegateVotesChangedLoader {
+    return new DelegateVotesChangedLoader(
+      "DelegateTracker",
+      this.get("id")!.toString(),
+      "delegateVotesChanges",
+    );
+  }
+
+  get transfers(): DelegateTrackerLoader {
+    return new DelegateTrackerLoader(
+      "DelegateTracker",
+      this.get("id")!.toString(),
+      "transfers",
     );
   }
 }
@@ -392,6 +560,32 @@ export class ProposalCreated extends Entity {
       this.get("id")!.toString(),
       "votes",
     );
+  }
+
+  get totalVotes(): BigInt {
+    let value = this.get("totalVotes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set totalVotes(value: BigInt) {
+    this.set("totalVotes", Value.fromBigInt(value));
+  }
+
+  get averageVotesPerVoter(): BigInt {
+    let value = this.get("averageVotesPerVoter");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set averageVotesPerVoter(value: BigInt) {
+    this.set("averageVotesPerVoter", Value.fromBigInt(value));
   }
 }
 
@@ -828,6 +1022,19 @@ export class VoteCast extends Entity {
     this.set("voter", Value.fromBytes(value));
   }
 
+  get delegate(): string {
+    let value = this.get("delegate");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set delegate(value: string) {
+    this.set("delegate", Value.fromString(value));
+  }
+
   get proposalId(): BigInt {
     let value = this.get("proposalId");
     if (!value || value.kind == ValueKind.NULL) {
@@ -991,6 +1198,32 @@ export class DelegateChanged extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
+  }
+
+  get delegate(): string {
+    let value = this.get("delegate");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set delegate(value: string) {
+    this.set("delegate", Value.fromString(value));
+  }
+
   get delegator(): Bytes {
     let value = this.get("delegator");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1113,6 +1346,32 @@ export class DelegateVotesChanged extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
+  }
+
+  get votes(): string {
+    let value = this.get("votes");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set votes(value: string) {
+    this.set("votes", Value.fromString(value));
+  }
+
   get delegate(): Bytes {
     let value = this.get("delegate");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1231,6 +1490,32 @@ export class Transfer extends Entity {
     this.set("id", Value.fromString(value));
   }
 
+  get dao(): string {
+    let value = this.get("dao");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set dao(value: string) {
+    this.set("dao", Value.fromString(value));
+  }
+
+  get transfers(): string {
+    let value = this.get("transfers");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toString();
+    }
+  }
+
+  set transfers(value: string) {
+    this.set("transfers", Value.fromString(value));
+  }
+
   get from(): Bytes {
     let value = this.get("from");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1307,6 +1592,24 @@ export class Transfer extends Entity {
 
   set transactionHash(value: Bytes) {
     this.set("transactionHash", Value.fromBytes(value));
+  }
+}
+
+export class DelegateTrackerLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): DelegateTracker[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<DelegateTracker[]>(value);
   }
 }
 
@@ -1397,5 +1700,41 @@ export class ProposalExecutedLoader extends Entity {
   load(): ProposalExecuted[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<ProposalExecuted[]>(value);
+  }
+}
+
+export class DelegateChangedLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): DelegateChanged[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<DelegateChanged[]>(value);
+  }
+}
+
+export class DelegateVotesChangedLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): DelegateVotesChanged[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<DelegateVotesChanged[]>(value);
   }
 }

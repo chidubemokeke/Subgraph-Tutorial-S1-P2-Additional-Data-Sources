@@ -1,6 +1,6 @@
 // Importing necessary types and classes from the @graphprotocol/graph-ts library
 import { BigInt, Bytes, Address } from "@graphprotocol/graph-ts";
-import { DAO } from "../../generated/schema";
+import { DAO, DelegateTracker, ProposalCreated } from "../../generated/schema";
 
 // Function to get or create a DAO entity and return it
 export function getOrCreateDAO(id: Bytes): DAO {
@@ -41,6 +41,60 @@ export function decrementProposalCount(dao: DAO): void {
   dao.totalProposals = dao.totalProposals.minus(increment); // Decrement totalProposals count by 1
   dao.save(); // Save the updated DAO entity to the graph datastore
 }
+
+// Helper function to calculate and update the average votes per proposal
+export function updateAverageVotesPerProposal(proposal: ProposalCreated): void {
+  if (!proposal) {
+    return;
+  }
+
+  let dao = DAO.load(proposal.dao);
+
+  if (!dao) {
+    return;
+  }
+
+  // Calculate the total votes for the proposal
+  let totalVotes = proposal.votesFor
+    .plus(proposal.votesAgainst)
+    .plus(proposal.votesAbstain);
+
+  // Update the DAO entity with new values
+  let totalProposals = dao.totalProposals;
+
+  // Calculate the average votes per proposal
+  if (totalProposals.equals(BigInt.fromI32(0))) {
+    dao.averageVotesPerProposal = BigInt.fromI32(0);
+  } else {
+    let totalVotesSum = dao.totalVotesCast.plus(totalVotes);
+    dao.averageVotesPerProposal = totalVotesSum.div(totalProposals);
+  }
+
+  // Save the updated DAO entity
+  dao.save();
+}
+
+// Function to get or create a DelegateTracker entity
+export function getOrCreateDelegateTracker(
+  daoId: string, // The ID of the DAO to which this DelegateTracker belongs
+  delegateAddress: Bytes // The address of the delegate
+): DelegateTracker {
+  // Construct a unique ID for the DelegateTracker entity
+  let id = daoId.concat("-").concat(delegateAddress.toHexString());
+
+  // Try to load the existing DelegateTracker
+  let delegateTracker = DelegateTracker.load(id);
+
+  // If the DelegateTracker does not exist, create a new one
+  if (!delegateTracker) {
+    delegateTracker = new DelegateTracker(id);
+    delegateTracker.dao = daoId;
+  }
+
+  // Return the existing or newly created DelegateTracker
+  return delegateTracker as DelegateTracker;
+}
+
 // Convert the targets array (Address[]) from the event to an array of Bytes[]
 // The targets field in the event parameters is of type Address[]
 // You need to convert each Address[] to Bytes[].

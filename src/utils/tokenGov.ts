@@ -11,6 +11,8 @@ import {
   DelegateVotesChanged as DelegateVotesChangedEvent,
   Transfer as TransferEvent,
 } from "../../generated/CToken/CToken";
+import { getOrCreateDAO, getOrCreateDelegateTracker } from "./logic";
+import { BigDecimal, BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 // Function to create a DelegateChanged entity from a DelegateChangedEvent
 export function createDelegateChanged(
@@ -19,23 +21,44 @@ export function createDelegateChanged(
   // Create a unique ID for the entity by combining the transaction hash and log index
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
+  // Get or create the DAO entity
+  let dao = getOrCreateDAO(event.address);
+
+  // Get or create DelegateTracker entities for the new delegate
+  let toDelegateTracker = getOrCreateDelegateTracker(
+    dao.id, // DAO ID
+    event.params.toDelegate // Delegate address (to)
+  );
+
   // Create a new DelegateChanged entity with the unique ID
   let delegateChanged = new DelegateChanged(id);
-  // Set the entity's properties based on the event parameters
+  delegateChanged.dao = dao.id;
+  delegateChanged.delegate = toDelegateTracker.id; // Reference the DelegateTracker entity
   delegateChanged.delegator = event.params.delegator;
   delegateChanged.fromDelegate = event.params.fromDelegate;
   delegateChanged.toDelegate = event.params.toDelegate;
-  // Set the block number when the event was emitted
   delegateChanged.blockNumber = event.block.number;
-  // Set the timestamp of the block when the event was emitted
   delegateChanged.blockTimestamp = event.block.timestamp;
-  // Set the transaction hash of the transaction that emitted the event
   delegateChanged.transactionHash = event.transaction.hash;
 
-  // Save the entity to the data store
+  // Save the DelegateChanged entity to the data store
   delegateChanged.save();
 
-  // Return the created entity
+  // Update the total delegated votes received and given for the DAO
+  dao.totalDelegatedVotesReceived = dao.totalDelegatedVotesReceived.plus(
+    BigInt.fromI32(1)
+  );
+  dao.totalDelegatedVotesGiven = dao.totalDelegatedVotesGiven.plus(
+    BigInt.fromI32(1)
+  );
+
+  // Increment the totalDelegateChanges for the DAO
+  dao.totalDelegateChanges = dao.totalDelegateChanges.plus(BigInt.fromI32(1));
+
+  // Save the updated DAO entity to the data store
+  dao.save();
+
+  // Return the created DelegateChanged entity
   return delegateChanged;
 }
 
@@ -46,34 +69,57 @@ export function createDelegateVotesChanged(
   // Create a unique ID for the entity by combining the transaction hash and log index
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
+  // Get or create the DAO entity
+  let dao = getOrCreateDAO(event.address);
+
+  // Get or create DelegateTracker entities for the delegate
+  let delegateTracker = getOrCreateDelegateTracker(
+    dao.id, // DAO ID
+    event.params.delegate // Delegate address
+  );
+
   // Create a new DelegateVotesChanged entity with the unique ID
   let delegateVotesChanged = new DelegateVotesChanged(id);
-  // Set the entity's properties based on the event parameters
-  delegateVotesChanged.delegate = event.params.delegate;
+  delegateVotesChanged.dao = dao.id;
+  delegateVotesChanged.votes = delegateTracker.id; // Reference the DelegateTracker entity
   delegateVotesChanged.previousBalance = event.params.previousBalance;
   delegateVotesChanged.newBalance = event.params.newBalance;
-  // Set the block number when the event was emitted
   delegateVotesChanged.blockNumber = event.block.number;
-  // Set the timestamp of the block when the event was emitted
   delegateVotesChanged.blockTimestamp = event.block.timestamp;
-  // Set the transaction hash of the transaction that emitted the event
   delegateVotesChanged.transactionHash = event.transaction.hash;
-  // Save the entity to the data store
+
+  // Save the DelegateVotesChanged entity to the data store
   delegateVotesChanged.save();
+
+  // Update the total delegated votes received for the DAO
+  let votesChange = event.params.newBalance.minus(event.params.previousBalance);
+  if (votesChange.gt(BigInt.fromI32(0))) {
+    dao.totalDelegatedVotesReceived =
+      dao.totalDelegatedVotesReceived.plus(votesChange);
+  } else {
+    dao.totalDelegatedVotesReceived = dao.totalDelegatedVotesReceived.minus(
+      votesChange.abs()
+    );
+  }
+
+  // Save the updated DAO entity to the data store
+  dao.save();
 
   // Return the created entity
   return delegateVotesChanged;
 }
 
-// Function to create a Transfer entity
+// Function to create a Transfer entity from a TransferEvent
 export function createTransfer(event: TransferEvent): Transfer {
   // Create a unique ID for the entity by combining the transaction hash and log index
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
+  // Get or create the DAO entity
+  let dao = getOrCreateDAO(event.address);
+
   // Create a new Transfer entity with the unique ID
   let transfer = new Transfer(id);
-
-  // Set the entity's properties based on the event parameters
+  transfer.dao = dao.id;
   transfer.from = event.params.from;
   transfer.to = event.params.to;
   transfer.amount = event.params.amount;
@@ -81,8 +127,19 @@ export function createTransfer(event: TransferEvent): Transfer {
   transfer.blockTimestamp = event.block.timestamp;
   transfer.transactionHash = event.transaction.hash;
 
-  // Save the entity to the data store
+  // Save the Transfer entity to the data store
   transfer.save();
+
+  // Update the totalTransfers field for the DAO
+  dao.totalTransfers = dao.totalTransfers.plus(BigInt.fromI32(1));
+
+  // Update the totalAmountTransferred field for the DAO
+  dao.totalAmountTransferred = dao.totalAmountTransferred.plus(
+    event.params.amount
+  );
+
+  // Save the updated DAO entity to the data store
+  dao.save();
 
   // Return the created entity
   return transfer;
