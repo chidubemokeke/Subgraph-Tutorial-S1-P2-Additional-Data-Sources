@@ -12,7 +12,7 @@ import {
   Transfer as TransferEvent,
 } from "../../generated/CToken/CToken";
 import { getOrCreateDAO, getOrCreateDelegateTracker } from "./logic";
-import { BigDecimal, BigInt, Bytes } from "@graphprotocol/graph-ts";
+import { BigInt } from "@graphprotocol/graph-ts";
 
 // Function to create a DelegateChanged entity from a DelegateChangedEvent
 export function createDelegateChanged(
