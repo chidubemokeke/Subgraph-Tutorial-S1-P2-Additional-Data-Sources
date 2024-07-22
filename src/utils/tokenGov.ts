@@ -117,6 +117,16 @@ export function createTransfer(event: TransferEvent): Transfer {
   // Get or create the DAO entity
   let dao = getOrCreateDAO(event.address);
 
+  // Get or create DelegateTracker entities for the 'from' and 'to' addresses
+  let fromDelegateTracker = getOrCreateDelegateTracker(
+    dao.id, // DAO ID
+    event.params.from // Delegate address (from)
+  );
+  let toDelegateTracker = getOrCreateDelegateTracker(
+    dao.id, // DAO ID
+    event.params.to // Delegate address (to)
+  );
+
   // Create a new Transfer entity with the unique ID
   let transfer = new Transfer(id);
   transfer.dao = dao.id;
@@ -140,6 +150,10 @@ export function createTransfer(event: TransferEvent): Transfer {
 
   // Save the updated DAO entity to the data store
   dao.save();
+
+  // Save the updated DelegateTracker entities
+  fromDelegateTracker.save();
+  toDelegateTracker.save();
 
   // Return the created entity
   return transfer;
