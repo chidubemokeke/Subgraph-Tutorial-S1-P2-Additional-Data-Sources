@@ -33,7 +33,7 @@ export function createDelegateChanged(
   // Create a new DelegateChanged entity with the unique ID
   let delegateChanged = new DelegateChanged(id);
   delegateChanged.dao = dao.id; // Reference the DAO entity
-  delegateChanged.delegate = toDelegateTracker.id; // Reference the DelegateTracker entity
+  delegateChanged.delegate = delegateChanged.id; // Reference the DelegateTracker entity
   delegateChanged.delegator = event.params.delegator;
   delegateChanged.fromDelegate = event.params.fromDelegate;
   delegateChanged.toDelegate = event.params.toDelegate;
@@ -141,6 +141,7 @@ export function createTransfer(event: TransferEvent): Transfer {
   // Create a new Transfer entity with the unique ID
   let transfer = new Transfer(id);
   transfer.dao = dao.id; // Reference the DAO entity
+  transfer.transferId = event.params._event.logIndex;
   transfer.transfers = transfer.id; // Reference the Transfer entity itself
   transfer.from = event.params.from;
   transfer.to = event.params.to;

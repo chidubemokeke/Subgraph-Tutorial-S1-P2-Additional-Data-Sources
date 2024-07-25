@@ -266,14 +266,6 @@ export class DelegateTracker extends Entity {
     this.set("dao", Value.fromString(value));
   }
 
-  get currentDelegate(): DelegateChangedLoader {
-    return new DelegateChangedLoader(
-      "DelegateTracker",
-      this.get("id")!.toString(),
-      "currentDelegate",
-    );
-  }
-
   get votes(): VoteCastLoader {
     return new VoteCastLoader(
       "DelegateTracker",
@@ -1560,6 +1552,19 @@ export class Transfer extends Entity {
     this.set("transfers", Value.fromString(value));
   }
 
+  get transferId(): BigInt {
+    let value = this.get("transferId");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set transferId(value: BigInt) {
+    this.set("transferId", Value.fromBigInt(value));
+  }
+
   get from(): Bytes {
     let value = this.get("from");
     if (!value || value.kind == ValueKind.NULL) {
@@ -1744,24 +1749,6 @@ export class ProposalExecutedLoader extends Entity {
   load(): ProposalExecuted[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<ProposalExecuted[]>(value);
-  }
-}
-
-export class DelegateChangedLoader extends Entity {
-  _entity: string;
-  _field: string;
-  _id: string;
-
-  constructor(entity: string, id: string, field: string) {
-    super();
-    this._entity = entity;
-    this._id = id;
-    this._field = field;
-  }
-
-  load(): DelegateChanged[] {
-    let value = store.loadRelated(this._entity, this._id, this._field);
-    return changetype<DelegateChanged[]>(value);
   }
 }
 

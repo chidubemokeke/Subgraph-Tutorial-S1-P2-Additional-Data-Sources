@@ -1,38 +1,38 @@
 # Represents a DAO (Decentralized Autonomous Organization)
 type DAO @entity {
   id: ID! # Unique identifier for each DAO entity
-  delegate: [DelegateTracker!]! @derivedFrom(field: "dao")
+  delegate: [DelegateTracker!]! @derivedFrom(field: "dao") # Array of DelegateTracker entities derived from the "dao" field in DelegateTracker
   totalProposals: BigInt! # Total number of proposals associated with the DAO
   totalVotesCast: BigInt! # Total number of votes cast across all proposals
   totalDelegatedVotesReceived: BigInt! # Total delegated votes received by the DAO
   totalDelegatedVotesGiven: BigInt! # Total delegated votes given out by the DAO
-  totalTransfers: BigInt!
+  totalTransfers: BigInt! # Total number of transfers within the DAO
   proposals: [ProposalCreated!]! @derivedFrom(field: "dao") # Array of proposals created by the DAO, derived from the "dao" field in ProposalCreated
   voters: [VoteCast!]! @derivedFrom(field: "dao") # Array of votes cast by members of the DAO, derived from the "dao" field in VoteCast
   canceled: [ProposalCanceled!]! @derivedFrom(field: "dao") # Array of proposals canceled by the DAO, derived from the "dao" field in ProposalCanceled
   queued: [ProposalQueued!]! @derivedFrom(field: "dao") # Array of proposals queued by the DAO, derived from the "dao" field in ProposalQueued
   executed: [ProposalExecuted!]! @derivedFrom(field: "dao") # Array of proposals executed by the DAO, derived from the "dao" field in ProposalExecuted
   # Aggregated data fields
-  totalAmountTransferred: BigInt!
-  totalDelegateChanges: BigInt! # Total number of DelegateChanges
-  averageVotesPerProposal: BigInt! # Average number of votes per proposal
+  totalAmountTransferred: BigInt! # Total amount of tokens transferred within the DAO
+  totalDelegateChanges: BigInt! # Total number of DelegateChanges within the DAO
+  averageVotesPerProposal: BigInt! # Average number of votes per proposal within the DAO
   uniqueVotersCount: BigInt! # Total number of unique voters in the DAO
 }
 
 # Represents tracking of delegate information within a DAO
 type DelegateTracker @entity {
   id: ID! # Unique identifier for each Delegate entity
-  dao: DAO!
-  currentDelegate: [DelegateChanged!]! @derivedFrom(field: "delegate")
-  votes: [VoteCast!]! @derivedFrom(field: "delegate")
-  delegateVotesChanges: [DelegateVotesChanged!]! @derivedFrom(field: "votes") # Array of delegate votes changes related to the DAO
-  transfers: [Transfer!]! @derivedFrom(field: "transfers") # Array of transfers related to the Delegate
-  changeCount: BigInt!
-  voteCount: BigInt!
-  balance: BigInt!
-  transferCount: BigInt!
+  dao: DAO! # Reference to the DAO entity associated with this DelegateTracker
+  votes: [VoteCast!]! @derivedFrom(field: "delegate") # Array of VoteCast entities derived from the "delegate" field
+  delegateVotesChanges: [DelegateVotesChanged!]! @derivedFrom(field: "votes") # Array of DelegateVotesChanged entities derived from the "votes" field
+  transfers: [Transfer!]! @derivedFrom(field: "transfers") # Array of Transfer entities derived from the "transfers" field
+  changeCount: BigInt! # Total number of delegate changes
+  voteCount: BigInt! # Total number of votes cast by the delegate
+  balance: BigInt! # Current balance of the delegate's votes
+  transferCount: BigInt! # Total number of transfers involving the delegate
 }
 
+# Represents the creation of a proposal within a DAO
 type ProposalCreated @entity {
   id: ID! # Unique identifier for each ProposalCreated entity
   creationId: BigInt! # Unique identifier for the proposal creation event
@@ -58,6 +58,7 @@ type ProposalCreated @entity {
   averageVotesPerVoter: BigInt! # Average number of votes per unique voter
 }
 
+# Represents the cancellation of a proposal within a DAO
 type ProposalCanceled @entity {
   id: ID! # Unique identifier for each ProposalCanceled entity
   cancelId: BigInt! # Unique identifier for the proposal cancellation event
@@ -68,6 +69,7 @@ type ProposalCanceled @entity {
   transactionHash: Bytes! # Transaction hash for the cancellation event
 }
 
+# Represents the execution of a proposal within a DAO
 type ProposalExecuted @entity {
   id: ID! # Unique identifier for each ProposalExecuted entity
   executionId: BigInt! # Unique identifier for the proposal execution event
@@ -78,6 +80,7 @@ type ProposalExecuted @entity {
   transactionHash: Bytes! # Transaction hash for the execution event
 }
 
+# Represents the queueing of a proposal within a DAO
 type ProposalQueued @entity {
   id: ID! # Unique identifier for each ProposalQueued entity
   queueId: BigInt! # Unique identifier for the proposal queue event
@@ -89,10 +92,11 @@ type ProposalQueued @entity {
   transactionHash: Bytes! # Transaction hash for the queue event
 }
 
+# Represents a vote cast on a proposal within a DAO
 type VoteCast @entity {
   id: ID! # Unique identifier for each VoteCast entity
   voter: Bytes! # Address of the voter who cast the vote
-  delegate: DelegateTracker!
+  delegate: DelegateTracker! # Reference to the DelegateTracker entity associated with this vote
   proposalId: BigInt! # Identifier of the proposal being voted on
   proposal: ProposalCreated! # Reference to the ProposalCreated entity associated with this vote
   dao: DAO! # Reference to the DAO entity of active members casting the vote
@@ -104,10 +108,11 @@ type VoteCast @entity {
   transactionHash: Bytes! # Transaction hash for the vote event
 }
 
+# Represents a change in delegation within a DAO
 type DelegateChanged @entity {
   id: ID! # Unique identifier for each DelegateChanged entity
-  dao: DAO!
-  delegate: DelegateTracker!
+  dao: DAO! # Reference to the DAO entity associated with this DelegateChanged event
+  delegate: DelegateTracker! # Reference to the DelegateTracker entity associated with this DelegateChanged event
   delegator: Bytes! # Address of the delegator who changed delegate
   fromDelegate: Bytes! # Previous address of the delegate
   toDelegate: Bytes! # New address of the delegate
@@ -116,10 +121,11 @@ type DelegateChanged @entity {
   transactionHash: Bytes! # Transaction hash for the delegate change event
 }
 
+# Represents a change in delegate votes within a DAO
 type DelegateVotesChanged @entity {
   id: ID! # Unique identifier for each DelegateVotesChanged entity
-  dao: DAO!
-  votes: DelegateTracker!
+  dao: DAO! # Reference to the DAO entity associated with this DelegateVotesChanged event
+  votes: DelegateTracker! # Reference to the DelegateTracker entity associated with this DelegateVotesChanged event
   delegate: Bytes! # Address of the delegate whose votes changed
   previousBalance: BigInt! # Previous balance of the delegate's votes
   newBalance: BigInt! # New balance of the delegate's votes
@@ -128,12 +134,14 @@ type DelegateVotesChanged @entity {
   transactionHash: Bytes! # Transaction hash for the votes change event
 }
 
+# Represents a transfer of tokens within a DAO
 type Transfer @entity {
   id: ID! # Unique identifier for each Transfer entity
-  dao: DAO!
+  dao: DAO! # Reference to the DAO entity associated with this Transfer
   transfers: DelegateTracker!
-  from: Bytes! # Address from which the tokens were transferred
-  to: Bytes! # Address to which the tokens were transferred
+  transferId: BigInt! # Unique identifier for the transfer event
+  from: Bytes! # Address of the sender
+  to: Bytes! # Address of the recipient
   amount: BigInt! # Amount of tokens transferred
   blockNumber: BigInt! # Block number when the transfer occurred
   blockTimestamp: BigInt! # Timestamp when the transfer occurred

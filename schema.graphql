@@ -23,7 +23,6 @@ type DAO @entity {
 type DelegateTracker @entity {
   id: ID! # Unique identifier for each Delegate entity
   dao: DAO! # Reference to the DAO entity associated with this DelegateTracker
-  currentDelegate: [DelegateChanged!]! @derivedFrom(field: "delegate") # Array of DelegateChanged entities derived from the "delegate" field
   votes: [VoteCast!]! @derivedFrom(field: "delegate") # Array of VoteCast entities derived from the "delegate" field
   delegateVotesChanges: [DelegateVotesChanged!]! @derivedFrom(field: "votes") # Array of DelegateVotesChanged entities derived from the "votes" field
   transfers: [Transfer!]! @derivedFrom(field: "transfers") # Array of Transfer entities derived from the "transfers" field
@@ -139,6 +138,7 @@ type DelegateVotesChanged @entity {
 type Transfer @entity {
   id: ID! # Unique identifier for each Transfer entity
   dao: DAO! # Reference to the DAO entity associated with this Transfer
+  transfers: DelegateTracker!
   transferId: BigInt! # Unique identifier for the transfer event
   from: Bytes! # Address of the sender
   to: Bytes! # Address of the recipient
