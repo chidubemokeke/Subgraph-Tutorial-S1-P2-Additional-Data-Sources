@@ -266,11 +266,11 @@ export class DelegateTracker extends Entity {
     this.set("dao", Value.fromString(value));
   }
 
-  get delegate(): DelegateChangedLoader {
+  get currentDelegate(): DelegateChangedLoader {
     return new DelegateChangedLoader(
       "DelegateTracker",
       this.get("id")!.toString(),
-      "delegate",
+      "currentDelegate",
     );
   }
 
@@ -282,14 +282,6 @@ export class DelegateTracker extends Entity {
     );
   }
 
-  get changes(): DelegateChangedLoader {
-    return new DelegateChangedLoader(
-      "DelegateTracker",
-      this.get("id")!.toString(),
-      "changes",
-    );
-  }
-
   get delegateVotesChanges(): DelegateVotesChangedLoader {
     return new DelegateVotesChangedLoader(
       "DelegateTracker",
@@ -298,12 +290,64 @@ export class DelegateTracker extends Entity {
     );
   }
 
-  get transfers(): DelegateTrackerLoader {
-    return new DelegateTrackerLoader(
+  get transfers(): TransferLoader {
+    return new TransferLoader(
       "DelegateTracker",
       this.get("id")!.toString(),
       "transfers",
     );
+  }
+
+  get changeCount(): BigInt {
+    let value = this.get("changeCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set changeCount(value: BigInt) {
+    this.set("changeCount", Value.fromBigInt(value));
+  }
+
+  get voteCount(): BigInt {
+    let value = this.get("voteCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set voteCount(value: BigInt) {
+    this.set("voteCount", Value.fromBigInt(value));
+  }
+
+  get balance(): BigInt {
+    let value = this.get("balance");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set balance(value: BigInt) {
+    this.set("balance", Value.fromBigInt(value));
+  }
+
+  get transferCount(): BigInt {
+    let value = this.get("transferCount");
+    if (!value || value.kind == ValueKind.NULL) {
+      throw new Error("Cannot return null for a required field.");
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set transferCount(value: BigInt) {
+    this.set("transferCount", Value.fromBigInt(value));
   }
 }
 
@@ -1736,5 +1780,23 @@ export class DelegateVotesChangedLoader extends Entity {
   load(): DelegateVotesChanged[] {
     let value = store.loadRelated(this._entity, this._id, this._field);
     return changetype<DelegateVotesChanged[]>(value);
+  }
+}
+
+export class TransferLoader extends Entity {
+  _entity: string;
+  _field: string;
+  _id: string;
+
+  constructor(entity: string, id: string, field: string) {
+    super();
+    this._entity = entity;
+    this._id = id;
+    this._field = field;
+  }
+
+  load(): Transfer[] {
+    let value = store.loadRelated(this._entity, this._id, this._field);
+    return changetype<Transfer[]>(value);
   }
 }

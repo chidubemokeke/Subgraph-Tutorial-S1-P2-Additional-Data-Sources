@@ -12,7 +12,7 @@ import {
   Transfer as TransferEvent,
 } from "../../generated/CToken/CToken";
 import { getOrCreateDAO, getOrCreateDelegateTracker } from "./logic";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { BigInt, Bytes } from "@graphprotocol/graph-ts";
 
 // Function to create a DelegateChanged entity from a DelegateChangedEvent
 export function createDelegateChanged(
@@ -32,7 +32,7 @@ export function createDelegateChanged(
 
   // Create a new DelegateChanged entity with the unique ID
   let delegateChanged = new DelegateChanged(id);
-  delegateChanged.dao = dao.id;
+  delegateChanged.dao = dao.id; // Reference the DAO entity
   delegateChanged.delegate = toDelegateTracker.id; // Reference the DelegateTracker entity
   delegateChanged.delegator = event.params.delegator;
   delegateChanged.fromDelegate = event.params.fromDelegate;
@@ -55,8 +55,14 @@ export function createDelegateChanged(
   // Increment the totalDelegateChanges for the DAO
   dao.totalDelegateChanges = dao.totalDelegateChanges.plus(BigInt.fromI32(1));
 
-  // Save the updated DAO entity to the data store
+  // Increment the changeCount for the DelegateTracker entities
+  toDelegateTracker.changeCount = toDelegateTracker.changeCount.plus(
+    BigInt.fromI32(1)
+  );
+
+  // Save the updated DAO and DelegateTracker entities to the data store
   dao.save();
+  toDelegateTracker.save();
 
   // Return the created DelegateChanged entity
   return delegateChanged;
@@ -70,7 +76,7 @@ export function createDelegateVotesChanged(
   let id = event.transaction.hash.toHex() + "-" + event.logIndex.toString();
 
   // Get or create the DAO entity
-  let dao = getOrCreateDAO(event.address);
+  let dao = getOrCreateDAO(event.address as Bytes);
 
   // Get or create DelegateTracker entities for the delegate
   let delegateTracker = getOrCreateDelegateTracker(
@@ -80,8 +86,9 @@ export function createDelegateVotesChanged(
 
   // Create a new DelegateVotesChanged entity with the unique ID
   let delegateVotesChanged = new DelegateVotesChanged(id);
-  delegateVotesChanged.dao = dao.id;
+  delegateVotesChanged.dao = dao.id; // Reference the DAO entity
   delegateVotesChanged.votes = delegateTracker.id; // Reference the DelegateTracker entity
+  delegateVotesChanged.delegate = event.params.delegate;
   delegateVotesChanged.previousBalance = event.params.previousBalance;
   delegateVotesChanged.newBalance = event.params.newBalance;
   delegateVotesChanged.blockNumber = event.block.number;
@@ -102,10 +109,14 @@ export function createDelegateVotesChanged(
     );
   }
 
-  // Save the updated DAO entity to the data store
-  dao.save();
+  // Increment the voteCount for the DelegateTracker entity
+  delegateTracker.voteCount = delegateTracker.voteCount.plus(BigInt.fromI32(1));
 
-  // Return the created entity
+  // Save the updated DAO and DelegateTracker entities to the data store
+  dao.save();
+  delegateTracker.save();
+
+  // Return the created DelegateVotesChanged entity
   return delegateVotesChanged;
 }
 
@@ -129,7 +140,8 @@ export function createTransfer(event: TransferEvent): Transfer {
 
   // Create a new Transfer entity with the unique ID
   let transfer = new Transfer(id);
-  transfer.dao = dao.id;
+  transfer.dao = dao.id; // Reference the DAO entity
+  transfer.transfers = transfer.id; // Reference the Transfer entity itself
   transfer.from = event.params.from;
   transfer.to = event.params.to;
   transfer.amount = event.params.amount;
@@ -148,13 +160,27 @@ export function createTransfer(event: TransferEvent): Transfer {
     event.params.amount
   );
 
-  // Save the updated DAO entity to the data store
-  dao.save();
+  // Update the DelegateTracker fields for 'from' address
+  fromDelegateTracker.balance = fromDelegateTracker.balance.minus(
+    event.params.amount
+  );
+  fromDelegateTracker.transferCount = fromDelegateTracker.transferCount.plus(
+    BigInt.fromI32(1)
+  );
 
-  // Save the updated DelegateTracker entities
+  // Update the DelegateTracker fields for 'to' address
+  toDelegateTracker.balance = toDelegateTracker.balance.plus(
+    event.params.amount
+  );
+  toDelegateTracker.transferCount = toDelegateTracker.transferCount.plus(
+    BigInt.fromI32(1)
+  );
+
+  // Save the updated DAO and DelegateTracker entities to the data store
+  dao.save();
   fromDelegateTracker.save();
   toDelegateTracker.save();
 
-  // Return the created entity
+  // Return the created Transfer entity
   return transfer;
 }

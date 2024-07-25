@@ -14,6 +14,12 @@ export function getOrCreateDAO(id: Bytes): DAO {
     dao.totalVotesCast = BigInt.fromI32(0); // Initialize totalVotesCast count as BigInt 0
     dao.totalDelegatedVotesReceived = BigInt.fromI32(0); // Initialize totalDelegatedVotesReceived count as BigInt 0
     dao.totalDelegatedVotesGiven = BigInt.fromI32(0); // Initialize totalDelegatedVotesGiven count as BigInt 0
+    dao.totalTransfers = BigInt.fromI32(0); // Initialize totalTransfers count as BigInt 0
+    dao.totalAmountTransferred = BigInt.fromI32(0); // Initialize totalAmountTransferred count as BigInt 0
+    dao.totalDelegateChanges = BigInt.fromI32(0); // Initialize totalDelegateChanges count as BigInt 0
+    dao.averageVotesPerProposal = BigInt.fromI32(0); // Initialize averageVotesPerProposal count as BigInt 0
+    dao.uniqueVotersCount = BigInt.fromI32(0); // Initialize uniqueVotersCount as BigInt 0
+
     dao.save(); // Save the newly created DAO entity to the graph datastore
   }
 
@@ -21,7 +27,7 @@ export function getOrCreateDAO(id: Bytes): DAO {
   return dao as DAO;
 }
 
-// Convert integer 1 to BigInt
+// Convert integer 1 to BigInt for increment operations
 let increment = BigInt.fromI32(1);
 
 // Function to increment proposal count
@@ -44,14 +50,17 @@ export function decrementProposalCount(dao: DAO): void {
 
 // Helper function to calculate and update the average votes per proposal
 export function updateAverageVotesPerProposal(proposal: ProposalCreated): void {
+  // Check if the proposal is valid
   if (!proposal) {
-    return;
+    return; // Exit the function if the proposal is invalid
   }
 
+  // Load the DAO entity associated with the proposal
   let dao = DAO.load(proposal.dao);
 
+  // Check if the DAO entity exists
   if (!dao) {
-    return;
+    return; // Exit the function if the DAO entity is not found
   }
 
   // Calculate the total votes for the proposal
@@ -64,10 +73,10 @@ export function updateAverageVotesPerProposal(proposal: ProposalCreated): void {
 
   // Calculate the average votes per proposal
   if (totalProposals.equals(BigInt.fromI32(0))) {
-    dao.averageVotesPerProposal = BigInt.fromI32(0);
+    dao.averageVotesPerProposal = BigInt.fromI32(0); // Set average votes to 0 if there are no proposals
   } else {
-    let totalVotesSum = dao.totalVotesCast.plus(totalVotes);
-    dao.averageVotesPerProposal = totalVotesSum.div(totalProposals);
+    let totalVotesSum = dao.totalVotesCast.plus(totalVotes); // Sum of all votes cast
+    dao.averageVotesPerProposal = totalVotesSum.div(totalProposals); // Calculate average votes per proposal
   }
 
   // Save the updated DAO entity
@@ -76,29 +85,34 @@ export function updateAverageVotesPerProposal(proposal: ProposalCreated): void {
 
 // Function to get or create a DelegateTracker entity
 export function getOrCreateDelegateTracker(
-  daoId: string, // The ID of the DAO to which this DelegateTracker belongs
-  delegateAddress: Bytes // The address of the delegate
+  daoId: string,
+  delegateAddress: Bytes
 ): DelegateTracker {
-  // Construct a unique ID for the DelegateTracker entity
-  let id = daoId.concat("-").concat(delegateAddress.toHexString());
-
-  // Try to load the existing DelegateTracker
+  // Create a unique ID for the DelegateTracker entity by combining DAO ID and delegate address
+  let id = daoId + "-" + delegateAddress.toHex();
+  // Load DelegateTracker entity from the graph datastore using its ID
   let delegateTracker = DelegateTracker.load(id);
 
-  // If the DelegateTracker does not exist, create a new one
-  if (!delegateTracker) {
-    delegateTracker = new DelegateTracker(id);
-    delegateTracker.dao = daoId;
+  // If DelegateTracker entity doesn't exist, create a new one
+  if (delegateTracker == null) {
+    delegateTracker = new DelegateTracker(id); // Instantiate new DelegateTracker entity with the unique ID
+    delegateTracker.dao = daoId; // Assign the DAO ID
+    delegateTracker.balance = BigInt.zero(); // Initialize balance with zero
+    delegateTracker.changeCount = BigInt.zero(); // Initialize changeCount with zero
+    delegateTracker.voteCount = BigInt.zero(); // Initialize voteCount with zero
+    delegateTracker.transferCount = BigInt.zero(); // Initialize transferCount with zero
+
+    delegateTracker.save(); // Save the newly created DelegateTracker entity to the graph datastore
   }
 
-  // Return the existing or newly created DelegateTracker
+  // Return the DelegateTracker entity (either loaded or newly created)
   return delegateTracker as DelegateTracker;
 }
 
 // Convert the targets array (Address[]) from the event to an array of Bytes[]
 // The targets field in the event parameters is of type Address[]
 // You need to convert each Address[] to Bytes[].
-// Function to convert an array of Address objects to an array of Bytes objects]
+// Function to convert an array of Address objects to an array of Bytes objects
 export function convertAddressesToBytesArray(addresses: Address[]): Bytes[] {
   // Initialize an empty array to hold the converted Bytes objects
   let bytesArray: Bytes[] = [];
@@ -119,7 +133,7 @@ export function convertValuesToBigIntArray(values: BigInt[]): BigInt[] {
   return values; // No need to convert, just return the array as is
 }
 
-// Convert the calldatas array (Bytes[]) from the event to an array of Bytes[]
+// Function to convert an array of Bytes objects to an array of Bytes objects
 export function convertCallDataToBytesArray(values: Bytes[]): Bytes[] {
   // Initialize an empty array to hold the Bytes objects
   let calldatasBytes: Bytes[] = [];
@@ -134,7 +148,7 @@ export function convertCallDataToBytesArray(values: Bytes[]): Bytes[] {
   return calldatasBytes;
 }
 
-// Convert the signature array (Strings[]) from the event to an array of Strings[]
+// Function to convert an array of string objects to an array of string objects
 export function convertStringsToStringsArray(strings: string[]): string[] {
   // Initialize an empty array to hold the strings
   let stringsArray: string[] = [];

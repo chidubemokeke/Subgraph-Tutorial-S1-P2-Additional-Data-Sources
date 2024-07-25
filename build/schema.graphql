@@ -23,11 +23,14 @@ type DAO @entity {
 type DelegateTracker @entity {
   id: ID! # Unique identifier for each Delegate entity
   dao: DAO!
-  delegate: [DelegateChanged!]! @derivedFrom(field: "delegate")
+  currentDelegate: [DelegateChanged!]! @derivedFrom(field: "delegate")
   votes: [VoteCast!]! @derivedFrom(field: "delegate")
-  changes: [DelegateChanged!]! @derivedFrom(field: "delegate") # Array of delegate changes related to the DAO
   delegateVotesChanges: [DelegateVotesChanged!]! @derivedFrom(field: "votes") # Array of delegate votes changes related to the DAO
-  transfers: [DelegateTracker!]! @derivedFrom(field: "transfers") # Array of transfers related to the Delegate
+  transfers: [Transfer!]! @derivedFrom(field: "transfers") # Array of transfers related to the Delegate
+  changeCount: BigInt!
+  voteCount: BigInt!
+  balance: BigInt!
+  transferCount: BigInt!
 }
 
 type ProposalCreated @entity {

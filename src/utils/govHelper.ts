@@ -44,13 +44,17 @@ export function getOrCreateDAO(id: string): DAO {
   // If DAO entity does not exist, create a new one
   if (!dao) {
     dao = new DAO(id);
-    dao.totalProposals = BigInt.fromI32(0); // Initialize proposal counts
-    dao.totalVotesCast = BigInt.fromI32(0); // Initialize vote counts
-    dao.totalDelegatedVotesReceived = BigInt.fromI32(0); // Initialize delegated vote counts
-    dao.totalDelegatedVotesGiven = BigInt.fromI32(0); // Initialize delegated vote counts
-    dao.averageVotesPerProposal = BigInt.fromI32(0);
-    dao.uniqueVotersCount = BigInt.fromI32(0);
-    dao.save(); // Persist DAO entity
+    dao.totalProposals = BigInt.fromI32(0); // Initialize totalProposals count as BigInt 0
+    dao.totalVotesCast = BigInt.fromI32(0); // Initialize totalVotesCast count as BigInt 0
+    dao.totalDelegatedVotesReceived = BigInt.fromI32(0); // Initialize totalDelegatedVotesReceived count as BigInt 0
+    dao.totalDelegatedVotesGiven = BigInt.fromI32(0); // Initialize totalDelegatedVotesGiven count as BigInt 0
+    dao.totalTransfers = BigInt.fromI32(0); // Initialize totalTransfers count as BigInt 0
+    dao.totalAmountTransferred = BigInt.fromI32(0); // Initialize totalAmountTransferred count as BigInt 0
+    dao.totalDelegateChanges = BigInt.fromI32(0); // Initialize totalDelegateChanges count as BigInt 0
+    dao.averageVotesPerProposal = BigInt.fromI32(0); // Initialize averageVotesPerProposal count as BigInt 0
+    dao.uniqueVotersCount = BigInt.fromI32(0); // Initialize uniqueVotersCount count as BigInt 0
+
+    dao.save(); // Save the newly created DAO entity to the graph datastore
   }
   return dao as DAO; // Return DAO entity
 }
@@ -142,6 +146,7 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   voteCast.proposalId = event.params.proposalId;
   voteCast.proposal = proposal.id;
   voteCast.dao = dao.id;
+  voteCast.delegate = voteCast.id;
   voteCast.support = event.params.support;
   voteCast.votes = votes;
   voteCast.reason = event.params.reason;
@@ -149,7 +154,7 @@ export function initializeProposalAndHandleVote(event: VoteCastEvent): void {
   voteCast.blockTimestamp = event.block.timestamp;
   voteCast.transactionHash = event.transaction.hash;
 
-  voteCast.save();
+  voteCast.save(); // Persist VoteCast entity
 }
 
 // Function to create and persist a ProposalExecuted entity when a ProposalExecutedEvent is emitted
@@ -241,15 +246,17 @@ export function createProposalCanceled(
   // Create ProposalCanceled entity
   let canceled = new ProposalCanceled(event.transaction.hash.toHex());
   canceled.cancelId = event.params.id;
+  canceled.dao = dao.id;
+  canceled.proposal = proposal.id;
   canceled.blockNumber = event.block.number;
   canceled.blockTimestamp = event.block.timestamp;
   canceled.transactionHash = event.transaction.hash;
-  canceled.dao = dao.id;
-  canceled.proposal = proposal.id;
 
-  decrementProposalCount(dao); // Decrement total proposal count
+  // Persist ProposalCanceled entity
+  canceled.save();
 
-  canceled.save(); // Persist ProposalCanceled entity
+  // Decrement proposal count in DAO entity
+  decrementProposalCount(dao);
 
-  return canceled; // Return ProposalCanceled entity
+  return canceled as ProposalCanceled;
 }
